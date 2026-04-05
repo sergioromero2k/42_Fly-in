@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FLY-IN — Plan de Construcción</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #2a2a3a;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --accent3: #a8ff3e;
+    --warn: #ffd60a;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --done: #a8ff3e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* HEADER */
+  header {
+    padding: 60px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .header-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-tag::before { content: '//'; opacity: 0.5; }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 10vw, 110px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+  h1 span { color: var(--accent); }
+
+  .header-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+  .meta-chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .meta-chip .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* PROGRESS BAR */
+  .progress-section {
+    margin-bottom: 48px;
+  }
+  .progress-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    width: 0%;
+    transition: width 1s ease;
+    border-radius: 2px;
+  }
+
+  /* DAY CARDS */
+  .day-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+    cursor: pointer;
+  }
+  .day-card:hover { border-color: rgba(0,229,255,0.3); }
+  .day-card.completed { border-color: rgba(168,255,62,0.3); }
+  .day-card.active { border-color: var(--accent); box-shadow: 0 0 30px rgba(0,229,255,0.08); }
+
+  .day-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 28px;
+  }
+
+  .day-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    line-height: 1;
+    color: var(--border);
+    transition: color 0.3s;
+    min-width: 60px;
+  }
+  .day-card.active .day-number { color: var(--accent); }
+  .day-card.completed .day-number { color: var(--done); }
+
+  .day-title-area {}
+  .day-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .day-title {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+  }
+  .day-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .day-meta-right {
+    text-align: right;
+  }
+  .hours-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--warn);
+    line-height: 1;
+  }
+  .hours-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .day-content {
+    display: none;
+    padding: 0 28px 28px;
+    border-top: 1px solid var(--border);
+  }
+  .day-card.open .day-content { display: block; }
+
+  /* SECTION BLOCKS */
+  .sections-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  @media(max-width: 700px) { .sections-grid { grid-template-columns: 1fr; } }
+
+  .section-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px 18px;
+  }
+  .section-block.full { grid-column: 1 / -1; }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label.teoria { color: #7c8cf8; }
+  .section-label.practica { color: var(--accent2); }
+  .section-label.objetivo { color: var(--accent); }
+  .section-label.entregable { color: var(--done); }
+  .section-label.horario { color: var(--warn); }
+  .section-label.warning { color: #ff4d6d; }
+
+  .section-label::before {
+    content: '';
+    width: 3px;
+    height: 12px;
+    border-radius: 2px;
+    background: currentColor;
+  }
+
+  ul.items { list-style: none; }
+  ul.items li {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text);
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  ul.items li:last-child { border-bottom: none; }
+  ul.items li::before {
+    content: '▸';
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+
+  /* SCHEDULE */
+  .schedule-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .schedule-row {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 12px;
+    align-items: center;
+    font-size: 12.5px;
+  }
+  .schedule-time {
+    font-family: 'Space Mono', monospace;
+    color: var(--warn);
+    font-size: 11px;
+  }
+  .schedule-task {
+    background: rgba(255,255,255,0.04);
+    padding: 5px 10px;
+    border-radius: 2px;
+    border-left: 2px solid transparent;
+  }
+  .schedule-task.code { border-color: var(--accent2); }
+  .schedule-task.study { border-color: #7c8cf8; }
+  .schedule-task.review { border-color: var(--done); }
+  .schedule-task.debug { border-color: var(--warn); }
+
+  /* CHECKBOX TASKS */
+  .task-list { display: flex; flex-direction: column; gap: 6px; }
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .task-checkbox {
+    width: 16px; height: 16px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .task-item.checked .task-checkbox {
+    background: var(--done);
+    border-color: var(--done);
+  }
+  .task-item.checked .task-checkbox::after { content: '✓'; font-size: 10px; color: #000; }
+  .task-item.checked span { text-decoration: line-through; color: var(--muted); }
+
+  /* CODE BLOCK */
+  .code-ref {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 8px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* DIFFICULTY BADGE */
+  .difficulty {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-left: 10px;
+  }
+  .difficulty.easy { background: rgba(168,255,62,0.1); color: var(--done); border: 1px solid rgba(168,255,62,0.2); }
+  .difficulty.medium { background: rgba(255,214,10,0.1); color: var(--warn); border: 1px solid rgba(255,214,10,0.2); }
+  .difficulty.hard { background: rgba(255,107,53,0.1); color: var(--accent2); border: 1px solid rgba(255,107,53,0.2); }
+  .difficulty.boss { background: rgba(255,77,109,0.1); color: #ff4d6d; border: 1px solid rgba(255,77,109,0.2); }
+
+  /* EXPAND HINT */
+  .expand-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .arrow { transition: transform 0.3s; display: inline-block; }
+  .day-card.open .arrow { transform: rotate(90deg); }
+
+  /* FOOTER */
+  .total-bar {
+    margin-top: 48px;
+    padding: 24px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+  }
+  .total-stat { text-align: center; }
+  .total-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .total-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* DAY TYPE TAG */
+  .type-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-left: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="header-tag">42 Project · Fly-in · Python 3.10+</div>
+    <h1>PLAN DE<br><span>CONSTRUCCIÓN</span></h1>
+    <p style="font-size:15px; color:var(--muted); max-width:560px; line-height:1.7;">Sistema de enrutamiento de drones sobre grafos. Parser + Algoritmo de pathfinding + Simulación por turnos + Visualización. Objetivo: <strong style="color:var(--text)">7 días.</strong></p>
+    <div class="header-meta">
+      <div class="meta-chip"><span class="dot"></span> Python 3.10+ · flake8 · mypy</div>
+      <div class="meta-chip">100% OOP · Type-safe</div>
+      <div class="meta-chip">10 mapas de prueba incluidos</div>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#7c8cf8"></div> Teoría</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div> Práctica/Código</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--done)"></div> Entregable del día</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--warn)"></div> Horario</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff4d6d"></div> Advertencia clave</div>
+    <div class="legend-item" style="margin-left:auto">
+      <span style="font-family:'Space Mono',monospace; font-size:11px; color:var(--muted)">Haz clic en cada día para expandir</span>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-section">
+    <div class="progress-label">Progreso general — 0 / 7 días completados</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <!-- ==================== DÍA 1 ==================== -->
+  <div class="day-card active open" data-day="1">
+    <div class="day-header" onclick="toggleDay(this.parentElement)">
+      <div class="day-number">01</div>
+      <div class="day-title-area">
+        <div class="day-label">Día 1 · Fundamentos</div>
+        <div class="day-title">Estructura del Proyecto + Parser
+          <span class="difficulty easy">EASY</span>
+        </div>
+        <div class="day-subtitle">Entender el formato del mapa · Parsear el fichero · Clases base</div>
+      </div>
+      <div class="day-meta-right">
+        <div class="hours-badge">6–8h</div>
+        <div class="hours-label">horas</div>
+        <div class="expand-hint"><span class="arrow">▶</span></div>
+      </div>
+    </div>
+    <div class="day-content">
+      <div class="sections-grid">
+
+        <div class="section-block">
+          <div class="section-label teoria">Teoría a aprender</div>
+          <ul class="items">
+            <li>Qué es un grafo dirigido/no-dirigido, nodos y aristas</li>
+            <li>Representación con lista de adyacencia (dict de listas)</li>
+            <li>Programación orientada a objetos en Python: dataclass vs class</li>
+            <li>Type hints: List, Dict, Optional, Tuple — módulo typing</li>
+            <li>PEP 257 — cómo escribir docstrings correctamente</li>
+            <li>Cómo funciona flake8 y por qué importa el estilo</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label practica">Código a escribir</div>
+          <ul class="items">
+            <li>Estructura del proyecto: carpetas, <code>__init__.py</code>, Makefile</li>
+            <li>Clase <strong>Zone</strong>: name, x, y, zone_type, color, max_drones</li>
+            <li>Clase <strong>Connection</strong>: zone_a, zone_b, max_link_capacity</li>
+            <li>Clase <strong>Graph</strong>: lista de zones y connections</li>
+            <li>Clase <strong>Parser</strong>: leer el fichero línea a línea</li>
+            <li>Manejo de errores: línea inválida, tipo desconocido, duplicados</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label warning">Reglas críticas del parser</div>
+          <ul class="items">
+            <li>Los nombres de zonas NO pueden tener guiones ni espacios</li>
+            <li>La primera línea SIEMPRE es <code>nb_drones: N</code></li>
+            <li>Debe haber exactamente 1 start_hub y 1 end_hub</li>
+            <li>Las conexiones solo pueden referenciar zonas ya definidas</li>
+            <li>Tipos válidos: normal, blocked, restricted, priority</li>
+            <li>Valores de capacidad: enteros positivos únicamente</li>
+            <li>Líneas con <code>#</code> al inicio se ignoran (comentarios)</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label entregable">Entregable al final del día</div>
+          <ul class="items">
+            <li>✅ <strong>parser.py</strong> que lee los 10 mapas sin errores</li>
+            <li>✅ Clases Zone, Connection, Graph con type hints y docstrings</li>
+            <li>✅ Makefile con reglas: install, run, lint, clean</li>
+            <li>✅ <code>make lint</code> pasa sin errores (flake8 + mypy)</li>
+            <li>✅ Test manual: cargar <code>easy/01_linear_path.txt</code> e imprimir el grafo</li>
+          </ul>
+        </div>
+
+        <div class="section-block full">
+          <div class="section-label horario">Distribución horaria del día</div>
+          <div class="schedule-timeline">
+            <div class="schedule-row"><span class="schedule-time">0:00 – 1:00</span><div class="schedule-task study">Leer el PDF entero (capítulos IV, V, VI, VII.4). Hacer esquema mental del formato.</div></div>
+            <div class="schedule-row"><span class="schedule-time">1:00 – 2:30</span><div class="schedule-task study">Repasar grafos, OOP Python, type hints. Crear la estructura de ficheros del proyecto.</div></div>
+            <div class="schedule-row"><span class="schedule-time">2:30 – 4:30</span><div class="schedule-task code">Escribir clases Zone, Connection, Graph. Empezar parser (nb_drones, start_hub, hub).</div></div>
+            <div class="schedule-row"><span class="schedule-time">4:30 – 6:00</span><div class="schedule-task code">Parsear connections y metadata. Manejo de errores. Probar con los 3 mapas easy.</div></div>
+            <div class="schedule-row"><span class="schedule-time">6:00 – 7:00</span><div class="schedule-task review">Pasar flake8 y mypy. Corregir. Escribir docstrings pendientes. Commit.</div></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="code-ref"># Estructura de carpetas sugerida
+fly_in/
+├── Makefile
+├── README.md
+├── main.py
+├── parser/
+│   ├── __init__.py
+│   └── map_parser.py
+├── models/
+│   ├── __init__.py
+│   ├── zone.py
+│   ├── connection.py
+│   └── graph.py
+└── maps/     ← copiar aquí los mapas del subject</div>
+    </div>
+  </div>
+
+  <!-- ==================== DÍA 2 ==================== -->
+  <div class="day-card" data-day="2">
+    <div class="day-header" onclick="toggleDay(this.parentElement)">
+      <div class="day-number">02</div>
+      <div class="day-title-area">
+        <div class="day-label">Día 2 · Algoritmo de Rutas</div>
+        <div class="day-title">BFS / Dijkstra adaptado al proyecto
+          <span class="difficulty medium">MEDIUM</span>
+        </div>
+        <div class="day-subtitle">Pathfinding single-drone · Costes por tipo de zona · Sin networkx</div>
+      </div>
+      <div class="day-meta-right">
+        <div class="hours-badge">7–9h</div>
+        <div class="hours-label">horas</div>
+        <div class="expand-hint"><span class="arrow">▶</span></div>
+      </div>
+    </div>
+    <div class="day-content">
+      <div class="sections-grid">
+
+        <div class="section-block">
+          <div class="section-label teoria">Teoría a aprender</div>
+          <ul class="items">
+            <li>BFS (Breadth-First Search): cómo encuentra el camino más corto en grafos no ponderados</li>
+            <li>Dijkstra: camino mínimo en grafos con pesos. Implementación con heapq</li>
+            <li>Cola de prioridad en Python: <code>import heapq</code> — cómo funciona</li>
+            <li>Costes del proyecto: normal=1, restricted=2, priority=1 (preferida), blocked=∞</li>
+            <li>Diferencia entre "coste de arista" y "coste de nodo destino"</li>
+            <li>Por qué NO puedes usar networkx (obligatorio implementar tú)</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label practica">Código a escribir</div>
+          <ul class="items">
+            <li>Método <code>get_neighbors(zone)</code> en Graph</li>
+            <li>Función <code>get_movement_cost(zone_type)</code> → int</li>
+            <li>Clase <strong>PathFinder</strong> con método <code>find_path(start, end) → List[Zone]</code></li>
+            <li>Implementar Dijkstra desde cero con heapq (sin networkx)</li>
+            <li>Manejar zonas blocked: simplemente no añadirlas como vecinas válidas</li>
+            <li>Manejar zonas priority: coste 1 pero priorizarlas en desempate</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label warning">Conceptos críticos del proyecto</div>
+          <ul class="items">
+            <li>Las zonas <strong>blocked</strong> son INACCESIBLES — nunca aparecen en un camino</li>
+            <li>Una zona <strong>restricted</strong> cuesta 2 turnos — el drone ocupa la conexión 1 turno</li>
+            <li>Una zona <strong>priority</strong> cuesta 1 turno pero debe ser PREFERIDA ante igualdad</li>
+            <li>El coste está en el DESTINO, no en la conexión (salvo max_link_capacity)</li>
+            <li>El pathfinder de hoy solo planifica 1 drone — el día 3 maneja N drones</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label entregable">Entregable al final del día</div>
+          <ul class="items">
+            <li>✅ <strong>PathFinder</strong> que encuentra camino óptimo en single-drone</li>
+            <li>✅ Funciona con los 3 mapas easy: linear, fork, capacity</li>
+            <li>✅ Respeta zonas blocked (no las atraviesa)</li>
+            <li>✅ Calcula correctamente coste con zonas restricted (2 turnos)</li>
+            <li>✅ Imprime el camino encontrado: [start → waypoint1 → goal]</li>
+          </ul>
+        </div>
+
+        <div class="section-block full">
+          <div class="section-label horario">Distribución horaria del día</div>
+          <div class="schedule-timeline">
+            <div class="schedule-row"><span class="schedule-time">0:00 – 1:30</span><div class="schedule-task study">Estudiar BFS y Dijkstra. Implementar BFS básico en Python desde cero (ejercicio previo).</div></div>
+            <div class="schedule-row"><span class="schedule-time">1:30 – 3:30</span><div class="schedule-task code">Implementar PathFinder con Dijkstra. Función get_neighbors(). Función de costes.</div></div>
+            <div class="schedule-row"><span class="schedule-time">3:30 – 5:30</span><div class="schedule-task code">Probar con easy maps. Depurar casos edge: grafo sin salida, zonas blocked, restricted.</div></div>
+            <div class="schedule-row"><span class="schedule-time">5:30 – 7:00</span><div class="schedule-task debug">Descubrir caminos múltiples (fork). Probar que priority se prioriza. Lint + mypy.</div></div>
+            <div class="schedule-row"><span class="schedule-time">7:00 – 8:00</span><div class="schedule-task review">Escribir tests manuales. Documentar PathFinder. Commit con mensaje descriptivo.</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DÍA 3 ==================== -->
+  <div class="day-card" data-day="3">
+    <div class="day-header" onclick="toggleDay(this.parentElement)">
+      <div class="day-number">03</div>
+      <div class="day-title-area">
+        <div class="day-label">Día 3 · El Corazón del Proyecto</div>
+        <div class="day-title">Motor de Simulación por Turnos
+          <span class="difficulty hard">HARD</span>
+        </div>
+        <div class="day-subtitle">Multi-drone · Capacidades · Detección de conflictos · Formato de salida</div>
+      </div>
+      <div class="day-meta-right">
+        <div class="hours-badge">8–10h</div>
+        <div class="hours-label">horas</div>
+        <div class="expand-hint"><span class="arrow">▶</span></div>
+      </div>
+    </div>
+    <div class="day-content">
+      <div class="sections-grid">
+
+        <div class="section-block">
+          <div class="section-label teoria">Conceptos clave a entender</div>
+          <ul class="items">
+            <li>Simulación discreta por turnos: qué pasa EXACTAMENTE cada turno</li>
+            <li>Ocupación de zonas: los drones que SALEN liberan espacio ese mismo turno</li>
+            <li>max_drones por zona: cuántos pueden estar simultáneamente</li>
+            <li>max_link_capacity: cuántos pueden cruzar la misma conexión a la vez</li>
+            <li>Drones en tránsito hacia restricted: ocupan la conexión 1 turno extra</li>
+            <li>Deadlock: dos drones bloqueándose mutuamente — cómo detectarlo y evitarlo</li>
+            <li>Start y End son especiales: capacidad ilimitada</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label practica">Código a escribir</div>
+          <ul class="items">
+            <li>Clase <strong>Drone</strong>: id, posición actual, camino asignado, estado (moving/waiting/transit)</li>
+            <li>Clase <strong>SimulationState</strong>: turno actual, posición de cada drone</li>
+            <li>Clase <strong>Simulator</strong>: ejecuta la simulación turno a turno</li>
+            <li>Método <code>compute_turn()</code>: calcular movimientos válidos de todos los drones</li>
+            <li>Método <code>check_capacity(zone, turn)</code>: verificar si hay espacio</li>
+            <li>Detección de drones en tránsito (restricted zones)</li>
+            <li>Formato de salida: <code>D1-zona D2-zona\n</code> por cada turno</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label warning">Las reglas más complicadas (¡no las olvides!)</div>
+          <ul class="items">
+            <li>Drones que SALEN de una zona la liberan en ESE MISMO turno (no el siguiente)</li>
+            <li>Un drone en tránsito a restricted: DEBE llegar el siguiente turno, no puede esperar en la conexión</li>
+            <li>Drones que ya llegaron a end_hub desaparecen — ya no se imprimen</li>
+            <li>Si un drone no se mueve en un turno, NO aparece en la línea de salida</li>
+            <li>La simulación termina cuando TODOS los drones han llegado al end</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label entregable">Entregable al final del día</div>
+          <ul class="items">
+            <li>✅ Simulación que imprime el formato correcto turno por turno</li>
+            <li>✅ Respeta max_drones por zona y max_link_capacity por conexión</li>
+            <li>✅ Los 3 mapas easy funcionan dentro del target (≤6, ≤6, ≤8 turnos)</li>
+            <li>✅ Drones que esperan no aparecen en el output</li>
+            <li>✅ Zonas restricted con tránsito de 2 turnos funcionando</li>
+          </ul>
+        </div>
+
+        <div class="section-block full">
+          <div class="section-label horario">Distribución horaria del día</div>
+          <div class="schedule-timeline">
+            <div class="schedule-row"><span class="schedule-time">0:00 – 1:00</span><div class="schedule-task study">Leer VII.2 y VII.3 del PDF hasta entender PERFECTAMENTE las reglas de movimiento.</div></div>
+            <div class="schedule-row"><span class="schedule-time">1:00 – 3:00</span><div class="schedule-task code">Implementar clases Drone y SimulationState. Lógica básica de turno con 1 drone.</div></div>
+            <div class="schedule-row"><span class="schedule-time">3:00 – 5:30</span><div class="schedule-task code">Extender a N drones. Implementar check de capacidad. Evitar conflictos de zona.</div></div>
+            <div class="schedule-row"><span class="schedule-time">5:30 – 7:30</span><div class="schedule-task debug">Probar easy maps. Depurar capacidades y turnos restricted. Verificar output format.</div></div>
+            <div class="schedule-row"><span class="schedule-time">7:30 – 9:00</span><div class="schedule-task review">Contar turnos vs targets del enunciado. Ajustar. Lint + mypy + commit.</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DÍA 4 ==================== -->
+  <div class="day-card" data-day="4">
+    <div class="day-header" onclick="toggleDay(this.parentElement)">
+      <div class="day-number">04</div>
+      <div class="day-title-area">
+        <div class="day-label">Día 4 · Optimización</div>
+        <div class="day-title">Asignación de Rutas Múltiples + Scheduling
+          <span class="difficulty hard">HARD</span>
+        </div>
+        <div class="day-subtitle">Flow-based routing · Staggering · Medium maps</div>
+      </div>
+      <div class="day-meta-right">
+        <div class="hours-badge">8–10h</div>
+        <div class="hours-label">horas</div>
+        <div class="expand-hint"><span class="arrow">▶</span></div>
+      </div>
+    </div>
+    <div class="day-content">
+      <div class="sections-grid">
+
+        <div class="section-block">
+          <div class="section-label teoria">Teoría a aprender</div>
+          <ul class="items">
+            <li>Flujo máximo en grafos (concepto teórico, no implementar completo)</li>
+            <li>Edge-disjoint paths: caminos que no comparten aristas — útil para N drones simultáneos</li>
+            <li>Staggering: escalonar la salida de drones para evitar cuellos de botella</li>
+            <li>Greedy scheduling: asignar drones al camino más libre disponible</li>
+            <li>Tradeoff: ¿mejor ruta para cada drone O misma ruta pero escalonada?</li>
+            <li>Dead-end detection: detectar si un camino es trampa antes de enviarlo</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label practica">Código a escribir</div>
+          <ul class="items">
+            <li>Método <code>find_all_paths(start, end)</code>: enumerar caminos posibles</li>
+            <li>Función <code>assign_routes(drones, paths)</code>: distribuir drones en múltiples rutas</li>
+            <li>Lógica de staggering: retrasar salida si la zona siguiente está llena</li>
+            <li>Refactorizar Simulator para usar asignación pre-calculada de rutas</li>
+            <li>Detección y exclusión de dead-ends antes de la simulación</li>
+            <li>Cache de rutas calculadas para no recalcular en cada turno</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label warning">Los medium maps que debes superar hoy</div>
+          <ul class="items">
+            <li><strong>dead_end_trap</strong> (5 drones, ≤15 turnos): no caigas en los dead-ends</li>
+            <li><strong>circular_loop</strong> (6 drones, ≤20 turnos): usa las zonas priority correctamente</li>
+            <li><strong>priority_puzzle</strong> (4 drones, ≤12 turnos): priority debe ser PREFERIDA</li>
+            <li>Si alguno falla el target: debuggear el scheduling, no el pathfinder</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label entregable">Entregable al final del día</div>
+          <ul class="items">
+            <li>✅ Los 3 mapas easy siguen pasando sus targets</li>
+            <li>✅ Al menos 2 de 3 mapas medium pasan sus targets</li>
+            <li>✅ El sistema detecta y evita dead-ends automáticamente</li>
+            <li>✅ Cache de rutas implementado (no recalcula Dijkstra cada turno)</li>
+          </ul>
+        </div>
+
+        <div class="section-block full">
+          <div class="section-label horario">Distribución horaria del día</div>
+          <div class="schedule-timeline">
+            <div class="schedule-row"><span class="schedule-time">0:00 – 1:30</span><div class="schedule-task study">Entender flujo máximo y staggering. Ver conceptualmente cómo dividir N drones en K rutas.</div></div>
+            <div class="schedule-row"><span class="schedule-time">1:30 – 4:00</span><div class="schedule-task code">Implementar find_all_paths() y assign_routes(). Añadir lógica de staggering al Simulator.</div></div>
+            <div class="schedule-row"><span class="schedule-time">4:00 – 6:30</span><div class="schedule-task debug">Probar medium maps uno a uno. Analizar los turnos con el output. Ajustar scheduling.</div></div>
+            <div class="schedule-row"><span class="schedule-time">6:30 – 8:00</span><div class="schedule-task review">Optimizar casos que no pasan. Lint + mypy. Commit con descripción del algoritmo.</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DÍA 5 ==================== -->
+  <div class="day-card" data-day="5">
+    <div class="day-header" onclick="toggleDay(this.parentElement)">
+      <div class="day-number">05</div>
+      <div class="day-title-area">
+        <div class="day-label">Día 5 · Hard Maps + Visual</div>
+        <div class="day-title">Mapas Difíciles + Representación Visual
+          <span class="difficulty boss">BOSS</span>
+        </div>
+        <div class="day-subtitle">maze · capacity hell · colored terminal output · graphical interface</div>
+      </div>
+      <div class="day-meta-right">
+        <div class="hours-badge">8–10h</div>
+        <div class="hours-label">horas</div>
+        <div class="expand-hint"><span class="arrow">▶</span></div>
+      </div>
+    </div>
+    <div class="day-content">
+      <div class="sections-grid">
+
+        <div class="section-block">
+          <div class="section-label teoria">Teoría / Conceptos</div>
+          <ul class="items">
+            <li>ANSI escape codes para colores en terminal: <code>\033[32m</code> etc.</li>
+            <li>Matplotlib o Pygame para interfaz gráfica (matplotlib más sencillo)</li>
+            <li>Representación de grafos como diagramas: nodos en coordenadas x,y</li>
+            <li>Análisis de bottlenecks: identificar nodos con max_drones=1 en camino crítico</li>
+            <li>Heurísticas de routing avanzadas: A* vs Dijkstra para mapas grandes</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label practica">Código a escribir</div>
+          <ul class="items">
+            <li>Módulo <strong>visualizer/terminal.py</strong>: imprimir cada turno con colores ANSI</li>
+            <li>Colores por tipo de zona: green=start, red=end, blue=normal, orange=restricted, cyan=priority, gray=blocked</li>
+            <li>Módulo <strong>visualizer/graph_display.py</strong>: dibujar el grafo con matplotlib</li>
+            <li>Animación: mostrar posición de cada drone en cada turno</li>
+            <li>Ajustar algoritmo para hard maps: maze (8 drones ≤45), capacity_hell (12 drones ≤60)</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label warning">Hard maps — los más complicados</div>
+          <ul class="items">
+            <li><strong>maze_nightmare</strong> (8 drones, ≤45t): hay dead-ends y restricted — detectar camino bueno</li>
+            <li><strong>capacity_hell</strong> (12 drones, ≤60t): max_drones=1 en muchos nodos — scheduling crítico</li>
+            <li><strong>ultimate_challenge</strong> (15 drones, ≤35t): target muy agresivo — necesitas rutas paralelas</li>
+            <li>No te obsesiones con el challenger hoy: empiézalo si sobra tiempo</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label entregable">Entregable al final del día</div>
+          <ul class="items">
+            <li>✅ Terminal con colores ANSI mostrando cada turno</li>
+            <li>✅ Visualización gráfica del grafo (matplotlib mínimo)</li>
+            <li>✅ Al menos 2 de 3 hard maps pasan sus targets</li>
+            <li>✅ <code>make run maps/hard/01_maze_nightmare.txt</code> funciona completo</li>
+          </ul>
+        </div>
+
+        <div class="section-block full">
+          <div class="section-label horario">Distribución horaria del día</div>
+          <div class="schedule-timeline">
+            <div class="schedule-row"><span class="schedule-time">0:00 – 2:00</span><div class="schedule-task code">Implementar visualizador terminal con ANSI colors. Probar que se ve bien el output.</div></div>
+            <div class="schedule-row"><span class="schedule-time">2:00 – 4:00</span><div class="schedule-task code">Implementar visualizador gráfico con matplotlib. Nodos en coordenadas, aristas, drones.</div></div>
+            <div class="schedule-row"><span class="schedule-time">4:00 – 6:30</span><div class="schedule-task debug">Atacar hard maps uno a uno. Maze: detectar dead-ends. Capacity: ajustar staggering.</div></div>
+            <div class="schedule-row"><span class="schedule-time">6:30 – 8:30</span><div class="schedule-task review">Pulir visualización. Lint + mypy. Commit. Si sobra tiempo: mirar el challenger.</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DÍA 6 ==================== -->
+  <div class="day-card" data-day="6">
+    <div class="day-header" onclick="toggleDay(this.parentElement)">
+      <div class="day-number">06</div>
+      <div class="day-title-area">
+        <div class="day-label">Día 6 · Pulido + README</div>
+        <div class="day-title">Robustez · Edge Cases · Documentación
+          <span class="difficulty medium">MEDIUM</span>
+        </div>
+        <div class="day-subtitle">Error handling · Tests · README completo · Mapas propios</div>
+      </div>
+      <div class="day-meta-right">
+        <div class="hours-badge">6–8h</div>
+        <div class="hours-label">horas</div>
+        <div class="expand-hint"><span class="arrow">▶</span></div>
+      </div>
+    </div>
+    <div class="day-content">
+      <div class="sections-grid">
+
+        <div class="section-block">
+          <div class="section-label practica">Qué hacer hoy</div>
+          <ul class="items">
+            <li>Crear 3–5 mapas propios para testear edge cases del parser</li>
+            <li>Mapa con zona blocked en camino directo: ¿ruta alternativa?</li>
+            <li>Mapa con conexión duplicada: ¿error claro en parser?</li>
+            <li>Mapa sin path posible: ¿mensaje de error útil?</li>
+            <li>Verificar que TODOS los errores del parser muestran línea y causa</li>
+            <li>Probar nb_drones muy grande (100 drones): ¿se cuelga?</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label entregable">README.md — contenido obligatorio</div>
+          <ul class="items">
+            <li>Primera línea: <em>This project has been created as part of the 42 curriculum by &lt;login&gt;</em></li>
+            <li>Sección Description: qué hace el proyecto en 3–5 líneas</li>
+            <li>Sección Instructions: cómo instalar y ejecutar (<code>make install</code>, <code>make run</code>)</li>
+            <li>Sección Algorithm: explicar BFS/Dijkstra + staggering + tu estrategia</li>
+            <li>Sección Visual Representation: qué muestra el terminal y la GUI</li>
+            <li>Sección Resources: links a BFS, Dijkstra, Python typing — y cómo usaste la IA</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label warning">Prepárate para la peer review</div>
+          <ul class="items">
+            <li>Debes poder explicar Dijkstra sin mirar el código — entrénalo</li>
+            <li>Debes saber por qué no usas networkx y qué hace tu Graph por dentro</li>
+            <li>Debes saber qué hace cada clase del OOP (Zone, Connection, Graph, PathFinder, Simulator)</li>
+            <li>Te pueden pedir hacer una pequeña modificación en directo — entiende tu propio código</li>
+            <li>Tener tests manuales que demuestran los edge cases que manejaste</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label entregable">Checklist del día</div>
+          <ul class="items">
+            <li>✅ README.md escrito en inglés, completo y detallado</li>
+            <li>✅ .gitignore con __pycache__, .mypy_cache, *.pyc</li>
+            <li>✅ <code>make lint</code> al 100% sin warnings</li>
+            <li>✅ Mapas propios de edge cases creados y funcionando</li>
+            <li>✅ Puedes ejecutar todos los mapas del subject en secuencia</li>
+          </ul>
+        </div>
+
+        <div class="section-block full">
+          <div class="section-label horario">Distribución horaria del día</div>
+          <div class="schedule-timeline">
+            <div class="schedule-row"><span class="schedule-time">0:00 – 2:00</span><div class="schedule-task code">Crear mapas edge case. Testear parser con errores deliberados. Fijar error messages.</div></div>
+            <div class="schedule-row"><span class="schedule-time">2:00 – 4:00</span><div class="schedule-task study">Escribir README completo. Documentar algoritmo, visual, estrategia, uso de IA.</div></div>
+            <div class="schedule-row"><span class="schedule-time">4:00 – 5:30</span><div class="schedule-task review">Limpiar código: quitar prints de debug, refactorizar funciones largas, comentar complejidades.</div></div>
+            <div class="schedule-row"><span class="schedule-time">5:30 – 7:00</span><div class="schedule-task review">Ensayar explicación de tu código. Simular preguntas de peer review. Commit final.</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DÍA 7 ==================== -->
+  <div class="day-card" data-day="7">
+    <div class="day-header" onclick="toggleDay(this.parentElement)">
+      <div class="day-number">07</div>
+      <div class="day-title-area">
+        <div class="day-label">Día 7 · Revisión Final</div>
+        <div class="day-title">Buffer, Bonus y Submission
+          <span class="difficulty easy">EASY</span>
+        </div>
+        <div class="day-subtitle">Revisión total · Bonus si procede · Push final</div>
+      </div>
+      <div class="day-meta-right">
+        <div class="hours-badge">4–6h</div>
+        <div class="hours-label">horas</div>
+        <div class="expand-hint"><span class="arrow">▶</span></div>
+      </div>
+    </div>
+    <div class="day-content">
+      <div class="sections-grid">
+
+        <div class="section-block">
+          <div class="section-label practica">Plan del día</div>
+          <ul class="items">
+            <li>Ejecutar TODOS los mapas del subject y anotar los turnos obtenidos</li>
+            <li>Comparar con los targets del enunciado — documentar resultados</li>
+            <li>Si tienes tiempo: atacar el Challenger (25 drones, target 45 turnos)</li>
+            <li>Revisar que todos los ficheros están en la raíz del repo (el enunciado lo exige)</li>
+            <li>Hacer un dry-run de evaluación: seguir la checklist del PDF capítulo X</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label entregable">Checklist de submission</div>
+          <ul class="items">
+            <li>✅ Ficheros en raíz del repo: main.py, Makefile, README.md, .gitignore</li>
+            <li>✅ <code>make install</code> funciona en entorno limpio</li>
+            <li>✅ <code>make run maps/easy/01_linear_path.txt</code> → output correcto</li>
+            <li>✅ <code>make lint</code> → cero errores flake8, cero errores mypy</li>
+            <li>✅ Todos los mapas se ejecutan sin crashes (excepciones controladas)</li>
+            <li>✅ Git push al repositorio correcto, rama main</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label warning">Bonus (solo si mandatory está perfecto)</div>
+          <ul class="items">
+            <li>Bonus 1: Cumplir los targets exactos de TODOS los mapas easy + medium + hard</li>
+            <li>Bonus 2: Resolver el Challenger con menos de 45 turnos (muy difícil)</li>
+            <li>No pierdas tiempo en bonus si algún mapa mandatory falla — arréglalo primero</li>
+          </ul>
+        </div>
+
+        <div class="section-block">
+          <div class="section-label horario">Distribución horaria</div>
+          <div class="schedule-timeline">
+            <div class="schedule-row"><span class="schedule-time">0:00 – 1:30</span><div class="schedule-task review">Ejecutar todos los mapas. Anotar resultados vs targets. Identificar los que fallan.</div></div>
+            <div class="schedule-row"><span class="schedule-time">1:30 – 3:00</span><div class="schedule-task debug">Corregir los que no pasan. Si todo pasa: atacar bonus o challenger.</div></div>
+            <div class="schedule-row"><span class="schedule-time">3:00 – 4:30</span><div class="schedule-task review">Revisión final de código y README. Dry-run de peer review. Push.</div></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- tabla de resultados -->
+      <div style="margin-top:20px; background:var(--surface); border:1px solid var(--border); border-radius:3px; padding:16px 18px;">
+        <div class="section-label objetivo" style="margin-bottom:12px;">Tabla de benchmarks — rellena con tus resultados</div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; font-family:'Space Mono',monospace; font-size:11px;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border);">
+                <th style="text-align:left; padding:6px 8px; color:var(--muted)">MAPA</th>
+                <th style="padding:6px 8px; color:var(--muted)">DRONES</th>
+                <th style="padding:6px 8px; color:var(--muted)">TARGET</th>
+                <th style="padding:6px 8px; color:var(--muted)">TU RESULTADO</th>
+                <th style="padding:6px 8px; color:var(--muted)">STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                <td style="padding:6px 8px; color:var(--text)">easy/01_linear_path</td>
+                <td style="padding:6px 8px; color:var(--muted); text-align:center">2</td>
+                <td style="padding:6px 8px; color:var(--done); text-align:center">≤ 6</td>
+                <td style="padding:6px 8px; color:var(--accent); text-align:center">—</td>
+                <td style="padding:6px 8px; text-align:center">⬜</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                <td style="padding:6px 8px; color:var(--text)">easy/02_simple_fork</td>
+                <td style="padding:6px 8px; color:var(--muted); text-align:center">3</td>
+                <td style="padding:6px 8px; color:var(--done); text-align:center">≤ 6</td>
+                <td style="padding:6px 8px; color:var(--accent); text-align:center">—</td>
+                <td style="padding:6px 8px; text-align:center">⬜</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                <td style="padding:6px 8px; color:var(--text)">easy/03_basic_capacity</td>
+                <td style="padding:6px 8px; color:var(--muted); text-align:center">4</td>
+                <td style="padding:6px 8px; color:var(--done); text-align:center">≤ 8</td>
+                <td style="padding:6px 8px; color:var(--accent); text-align:center">—</td>
+                <td style="padding:6px 8px; text-align:center">⬜</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                <td style="padding:6px 8px; color:var(--text)">medium/01_dead_end_trap</td>
+                <td style="padding:6px 8px; color:var(--muted); text-align:center">5</td>
+                <td style="padding:6px 8px; color:var(--warn); text-align:center">≤ 15</td>
+                <td style="padding:6px 8px; color:var(--accent); text-align:center">—</td>
+                <td style="padding:6px 8px; text-align:center">⬜</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                <td style="padding:6px 8px; color:var(--text)">medium/02_circular_loop</td>
+                <td style="padding:6px 8px; color:var(--muted); text-align:center">6</td>
+                <td style="padding:6px 8px; color:var(--warn); text-align:center">≤ 20</td>
+                <td style="padding:6px 8px; color:var(--accent); text-align:center">—</td>
+                <td style="padding:6px 8px; text-align:center">⬜</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                <td style="padding:6px 8px; color:var(--text)">medium/03_priority_puzzle</td>
+                <td style="padding:6px 8px; color:var(--muted); text-align:center">4</td>
+                <td style="padding:6px 8px; color:var(--warn); text-align:center">≤ 12</td>
+                <td style="padding:6px 8px; color:var(--accent); text-align:center">—</td>
+                <td style="padding:6px 8px; text-align:center">⬜</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                <td style="padding:6px 8px; color:var(--text)">hard/01_maze_nightmare</td>
+                <td style="padding:6px 8px; color:var(--muted); text-align:center">8</td>
+                <td style="padding:6px 8px; color:var(--accent2); text-align:center">≤ 45</td>
+                <td style="padding:6px 8px; color:var(--accent); text-align:center">—</td>
+                <td style="padding:6px 8px; text-align:center">⬜</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                <td style="padding:6px 8px; color:var(--text)">hard/02_capacity_hell</td>
+                <td style="padding:6px 8px; color:var(--muted); text-align:center">12</td>
+                <td style="padding:6px 8px; color:var(--accent2); text-align:center">≤ 60</td>
+                <td style="padding:6px 8px; color:var(--accent); text-align:center">—</td>
+                <td style="padding:6px 8px; text-align:center">⬜</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                <td style="padding:6px 8px; color:var(--text)">hard/03_ultimate_challenge</td>
+                <td style="padding:6px 8px; color:var(--muted); text-align:center">15</td>
+                <td style="padding:6px 8px; color:var(--accent2); text-align:center">≤ 35</td>
+                <td style="padding:6px 8px; color:var(--accent); text-align:center">—</td>
+                <td style="padding:6px 8px; text-align:center">⬜</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 8px; color:var(--muted); font-style:italic">challenger/impossible_dream</td>
+                <td style="padding:6px 8px; color:var(--muted); text-align:center">25</td>
+                <td style="padding:6px 8px; color:#ff4d6d; text-align:center">< 45</td>
+                <td style="padding:6px 8px; color:var(--accent); text-align:center">—</td>
+                <td style="padding:6px 8px; text-align:center">⭐</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOTALS -->
+  <div class="total-bar" style="display:flex; justify-content:space-around; align-items:center; flex-wrap:wrap; gap:20px;">
+    <div class="total-stat">
+      <div class="total-number">7</div>
+      <div class="total-label">Días totales</div>
+    </div>
+    <div class="total-stat">
+      <div class="total-number" style="color:var(--warn)">~50h</div>
+      <div class="total-label">Horas estimadas</div>
+    </div>
+    <div class="total-stat">
+      <div class="total-number" style="color:var(--done)">10</div>
+      <div class="total-label">Mapas a superar</div>
+    </div>
+    <div class="total-stat">
+      <div class="total-number" style="color:var(--accent2)">4</div>
+      <div class="total-label">Módulos principales</div>
+    </div>
+    <div class="total-stat" style="text-align:center; max-width:200px;">
+      <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); line-height:1.6;">
+        Parser → PathFinder<br>→ Simulator → Visualizer
+      </div>
+      <div class="total-label" style="margin-top:4px;">Arquitectura</div>
+    </div>
+  </div>
+
+  <!-- QUICK REFERENCE -->
+  <div style="margin-top:32px; padding:20px 24px; background:var(--surface); border:1px solid var(--border); border-radius:4px;">
+    <div class="section-label objetivo" style="margin-bottom:16px;">Referencia rápida — Reglas que siempre olvidan</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; font-size:12px;">
+      <div>
+        <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:8px; letter-spacing:2px;">COSTES DE MOVIMIENTO</div>
+        <div style="color:var(--done)">normal → 1 turno</div>
+        <div style="color:var(--warn)">restricted → 2 turnos</div>
+        <div style="color:var(--accent)">priority → 1 turno (preferir)</div>
+        <div style="color:#ff4d6d">blocked → IMPOSIBLE</div>
+      </div>
+      <div>
+        <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:8px; letter-spacing:2px;">CAPACIDAD</div>
+        <div>start_hub → ilimitado</div>
+        <div>end_hub → ilimitado</div>
+        <div>hub normal → max_drones (def. 1)</div>
+        <div>connection → max_link_capacity (def. 1)</div>
+      </div>
+      <div>
+        <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:8px; letter-spacing:2px;">OUTPUT FORMAT</div>
+        <div style="font-family:'Space Mono',monospace; font-size:11px; color:var(--accent)">D1-zona D2-zona</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:4px;">Una línea por turno</div>
+        <div style="font-size:11px; color:var(--muted)">Drones que no mueven → omitir</div>
+        <div style="font-size:11px; color:var(--muted)">Drones en end → omitir siempre</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PERMITIDO / PROHIBIDO ==================== -->
+  <div style="margin-top:32px;">
+    <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--accent); letter-spacing:4px; text-transform:uppercase; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+      <span style="opacity:0.5">//</span> Funciones, librerías y prácticas — permitidas vs prohibidas
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+      <!-- PERMITIDO -->
+      <div style="background:#0d1a0d; border:1px solid rgba(168,255,62,0.25); border-radius:4px; padding:20px 22px;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--done); letter-spacing:2px; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:20px;">✓</span> PERMITIDO
+        </div>
+
+        <div style="font-family:'Space Mono',monospace; font-size:9px; color:rgba(168,255,62,0.5); letter-spacing:3px; text-transform:uppercase; margin-bottom:8px; margin-top:4px;">Librerías estándar de Python</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px;">
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">heapq</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">collections</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">typing</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">dataclasses</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">sys</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">os</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">re</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">math</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">copy</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">enum</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">abc</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">itertools</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">functools</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">pathlib</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">argparse</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">logging</span>
+        </div>
+
+        <div style="font-family:'Space Mono',monospace; font-size:9px; color:rgba(168,255,62,0.5); letter-spacing:3px; text-transform:uppercase; margin-bottom:8px;">Librerías externas (sí permitidas)</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px;">
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">matplotlib <span style="opacity:0.6">— visualización gráfica</span></span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">pygame <span style="opacity:0.6">— GUI opcional</span></span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">pytest <span style="opacity:0.6">— tests (no se entrega)</span></span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">flake8 <span style="opacity:0.6">— linting obligatorio</span></span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.2); color:var(--done); padding:3px 9px; border-radius:2px;">mypy <span style="opacity:0.6">— type checking obligatorio</span></span>
+        </div>
+
+        <div style="font-family:'Space Mono',monospace; font-size:9px; color:rgba(168,255,62,0.5); letter-spacing:3px; text-transform:uppercase; margin-bottom:8px;">Prácticas correctas</div>
+        <ul style="list-style:none; display:flex; flex-direction:column; gap:6px;">
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--done); font-size:12px; margin-top:1px;">✓</span> Implementar Dijkstra/BFS desde cero con heapq</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--done); font-size:12px; margin-top:1px;">✓</span> Usar <code style="font-family:'Space Mono',monospace; font-size:11px; color:var(--accent)">dict</code> / <code style="font-family:'Space Mono',monospace; font-size:11px; color:var(--accent)">list</code> para representar el grafo</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--done); font-size:12px; margin-top:1px;">✓</span> Type hints en todas las funciones y variables</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--done); font-size:12px; margin-top:1px;">✓</span> Docstrings en todas las clases y métodos (PEP 257)</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--done); font-size:12px; margin-top:1px;">✓</span> try/except para manejar errores de I/O y parseo</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--done); font-size:12px; margin-top:1px;">✓</span> Context managers (<code style="font-family:'Space Mono',monospace; font-size:11px; color:var(--accent)">with open(...)</code>) para abrir ficheros</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--done); font-size:12px; margin-top:1px;">✓</span> Clases OOP con responsabilidad única por clase</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--done); font-size:12px; margin-top:1px;">✓</span> Usar <code style="font-family:'Space Mono',monospace; font-size:11px; color:var(--accent)">@dataclass</code> para clases de datos simples</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--done); font-size:12px; margin-top:1px;">✓</span> Usar IA para entender conceptos, comprobar lógica — no para copiar sin entender</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:var(--done); font-size:12px; margin-top:1px;">✓</span> Crear tus propios mapas de test para edge cases</li>
+        </ul>
+      </div>
+
+      <!-- PROHIBIDO -->
+      <div style="background:#1a0d0d; border:1px solid rgba(255,77,109,0.25); border-radius:4px; padding:20px 22px;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:28px; color:#ff4d6d; letter-spacing:2px; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:20px;">✗</span> PROHIBIDO
+        </div>
+
+        <div style="font-family:'Space Mono',monospace; font-size:9px; color:rgba(255,77,109,0.5); letter-spacing:3px; text-transform:uppercase; margin-bottom:8px;">Librerías de grafos — BAN total</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px;">
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(255,77,109,0.08); border:1px solid rgba(255,77,109,0.25); color:#ff4d6d; padding:3px 9px; border-radius:2px;">networkx</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(255,77,109,0.08); border:1px solid rgba(255,77,109,0.25); color:#ff4d6d; padding:3px 9px; border-radius:2px;">graphlib</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(255,77,109,0.08); border:1px solid rgba(255,77,109,0.25); color:#ff4d6d; padding:3px 9px; border-radius:2px;">igraph</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(255,77,109,0.08); border:1px solid rgba(255,77,109,0.25); color:#ff4d6d; padding:3px 9px; border-radius:2px;">graph-tool</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(255,77,109,0.08); border:1px solid rgba(255,77,109,0.25); color:#ff4d6d; padding:3px 9px; border-radius:2px;">scipy.sparse.csgraph</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(255,77,109,0.08); border:1px solid rgba(255,77,109,0.25); color:#ff4d6d; padding:3px 9px; border-radius:2px;">pyvis</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(255,77,109,0.08); border:1px solid rgba(255,77,109,0.25); color:#ff4d6d; padding:3px 9px; border-radius:2px;">rustworkx</span>
+          <span style="font-family:'Space Mono',monospace; font-size:11px; background:rgba(168,255,62,0.08); border:1px solid rgba(168,255,62,0.25); color:var(--done); padding:3px 9px; border-radius:2px; font-style:italic;">cualquier otra que haga pathfinding</span>
+        </div>
+
+        <div style="font-family:'Space Mono',monospace; font-size:9px; color:rgba(255,77,109,0.5); letter-spacing:3px; text-transform:uppercase; margin-bottom:8px;">Prácticas prohibidas en el código</div>
+        <ul style="list-style:none; display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Variables sin type hint en funciones (<code style="font-family:'Space Mono',monospace; font-size:11px;">mypy</code> lo pillará)</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Funciones sin docstring (se penaliza en peer review)</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Código que no pase <code style="font-family:'Space Mono',monospace; font-size:11px;">flake8</code> — líneas largas, imports no usados</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Variables globales mutables fuera de clases</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Código procedural sin OOP — todo debe estar en clases</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Abrir ficheros sin context manager (<code style="font-family:'Space Mono',monospace; font-size:11px;">open()</code> suelto sin <code style="font-family:'Space Mono',monospace; font-size:11px;">with</code>)</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Excepciones sin manejar que crashen el programa en review</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Nombres de zona con guiones en los mapas propios que crees</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Dos conexiones a→b y b→a en el mismo fichero (duplicado)</li>
+        </ul>
+
+        <div style="font-family:'Space Mono',monospace; font-size:9px; color:rgba(255,77,109,0.5); letter-spacing:3px; text-transform:uppercase; margin-bottom:8px;">Lo que NO puedes hacer con IA (según el enunciado)</div>
+        <ul style="list-style:none; display:flex; flex-direction:column; gap:6px;">
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Copiar una función completa de IA sin entender cada línea</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Pegar código de IA que no puedas explicar en peer review</li>
+          <li style="font-size:12.5px; color:var(--text); display:flex; gap:8px; align-items:flex-start;"><span style="color:#ff4d6d; font-size:12px; margin-top:1px;">✗</span> Usar IA como sustituto de entender el algoritmo — si fallas la explicación, fallas el proyecto</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- ZONA GRIS: depende -->
+    <div style="margin-top:16px; background:var(--surface); border:1px solid rgba(255,214,10,0.25); border-radius:4px; padding:18px 22px;">
+      <div style="font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--warn); letter-spacing:2px; margin-bottom:12px; display:flex; align-items:center; gap:10px;">
+        <span>⚠</span> ZONA GRIS — Depende de cómo lo uses
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+        <div style="font-size:12.5px; line-height:1.7;">
+          <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--warn); margin-bottom:6px;">numpy / scipy</div>
+          Permitido si no usas funciones de pathfinding. Si solo lo usas para arrays o cálculos matemáticos auxiliares, está bien. Pero si usas <code style="font-family:'Space Mono',monospace; font-size:10px;">scipy.sparse.csgraph.shortest_path</code> → prohibido.
+        </div>
+        <div style="font-size:12.5px; line-height:1.7;">
+          <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--warn); margin-bottom:6px;">collections.deque</div>
+          Perfectamente válido para implementar BFS tú mismo. La deque es una estructura de datos estándar, no una librería de grafos. Úsala sin miedo en tu PathFinder.
+        </div>
+        <div style="font-size:12.5px; line-height:1.7;">
+          <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--warn); margin-bottom:6px;">Código generado por IA</div>
+          Permitido si lo entiendes, lo revisas con un peer, y puedes explicarlo. El enunciado lo dice explícitamente: úsala para reducir tareas repetitivas, no como sustituto de pensar.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function toggleDay(card) {
+  card.classList.toggle('open');
+  card.classList.toggle('active', card.classList.contains('open'));
+}
+
+// Track days as done (not really needed for functionality but nice)
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    document.getElementById('progressFill').style.width = '14%'; // day 1 / 7
+  }, 500);
+});
+</script>
+</body>
+</html>
