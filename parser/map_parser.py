@@ -49,9 +49,11 @@ class Parser:
                 elif line.startswith("start_hub:"):
                     parts = line.split()
                     start = self.parse_zone(parts)
+                    zones.append(start)
                 elif line.startswith("end_hub:"):
                     parts = line.split()
                     end = self.parse_zone(parts)
+                    zones.append(end)
                 elif line.startswith("hub:"):
                     parts = line.split()
                     zones.append(self.parse_zone(parts))

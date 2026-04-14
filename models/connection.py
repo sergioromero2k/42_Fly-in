@@ -17,7 +17,7 @@ class Connection:
         self.zone_b = zone_b
         self.max_link_capacity = max_link_capacity
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"Zone A: {self.zone_a}, Zone B: {self.zone_b}"
             f" Max link Capacity: {self.max_link_capacity}"

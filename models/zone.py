@@ -32,7 +32,7 @@ class Zone:
         self.color = color
         self.max_drone = max_drone
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"Name: {self.name}, x: {self.x}, y: {self.y}"
             f", type_zone: {self.zone_type}, color: {self.color}, "

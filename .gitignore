@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+
+# Static Analysis & Linting
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.flake8
+
+# Project specific
+.DS_Store
+*.log
+
+# Test programs (Recommended to exclude as per subject)
+tests/
+test_*.py
