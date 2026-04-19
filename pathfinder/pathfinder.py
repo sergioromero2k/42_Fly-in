@@ -7,10 +7,31 @@ import heapq
 
 
 class PathFinder:
+    """
+        Algorithm provider for finding the most efficient routes for drones.
+
+        This class implements a weighted search (Dijkstra) to account for 
+        different zone costs (restricted vs normal).
+    """
     def __init__(self, graph: Graph) -> None:
+        """
+        Initializes the PathFinder with a graph.
+
+        Args:
+            graph: A validated Graph instance representing the drone network.
+        """
         self.graph = graph
 
     def get_neighbors(self, zone: Zone) -> List[Zone]:
+        """
+        Retrieves all accessible adjacent zones that are not blocked.
+
+        Args:
+            zone: The Zone object to check neighbors from.
+
+        Returns:
+            A list of accessible Zone objects connected to the input zone.
+        """
         neighbors = []
         for connection in self.graph.connections:
             if connection.zone_a == zone:
@@ -24,6 +45,17 @@ class PathFinder:
         return neighbors
 
     def get_cost(self, zone: Zone) -> float:
+        """Determines the movement cost (turns) based on the zone type.
+
+        Args:
+            zone: The destination zone to evaluate.
+
+        Returns:
+            An integer representing the cost in turns:
+            - 2 for 'restricted' zones.
+            - 1 for 'normal' or 'priority' zones.
+            - 999999 for 'blocked' zones.
+        """
         if zone.zone_type == "normal":
             return 1
         if zone.zone_type == "priority":
@@ -35,6 +67,17 @@ class PathFinder:
         return 1
 
     def find_path(self, start: Zone, end: Zone) -> List[Zone]:
+        """
+        Computes the shortest path between two hubs using Dijkstra's algorithm.
+
+        Args:
+            start: The starting hub (start_hub).
+            end: The destination hub (end_hub).
+
+        Returns:
+            A list of Zone objects from start to end. Returns an empty list 
+            if no valid path is found.
+        """
         distances = {zone: float("inf") for zone in self.graph.zones}
         distances[start] = 0
 

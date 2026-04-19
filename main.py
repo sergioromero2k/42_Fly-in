@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from parser.map_parser import Parser
-from pathfinder.pathfinder import PathFinder
+from simulator.simulator import Simulator
 
 
 def main() -> None:
@@ -17,13 +17,10 @@ def main() -> None:
     # print(graph_4)
 
     parser = Parser()
-    graph = parser.parse("maps/medium/03_priority_puzzle.txt")
+    graph = parser.parse("maps/easy/03_basic_capacity.txt")
 
-    pf = PathFinder(graph)
-    path = pf.find_path(graph.start, graph.end)
-
-    for zone in path:
-        print(zone.name)
+    sim = Simulator(graph)
+    sim.run()
 
 
 if __name__ == "__main__":
