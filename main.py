@@ -17,8 +17,7 @@ def main() -> None:
     # print(graph_4)
 
     parser = Parser()
-    graph = parser.parse("maps/easy/03_basic_capacity.txt")
-
+    graph = parser.parse("maps/challenger/01_the_impossible_dream.txt")
     sim = Simulator(graph)
     sim.run()
 

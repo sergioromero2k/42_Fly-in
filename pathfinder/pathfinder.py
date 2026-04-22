@@ -8,11 +8,12 @@ import heapq
 
 class PathFinder:
     """
-        Algorithm provider for finding the most efficient routes for drones.
+    Algorithm provider for finding the most efficient routes for drones.
 
-        This class implements a weighted search (Dijkstra) to account for 
-        different zone costs (restricted vs normal).
+    This class implements a weighted search (Dijkstra) to account for
+    different zone costs (restricted vs normal).
     """
+
     def __init__(self, graph: Graph) -> None:
         """
         Initializes the PathFinder with a graph.
@@ -75,7 +76,7 @@ class PathFinder:
             end: The destination hub (end_hub).
 
         Returns:
-            A list of Zone objects from start to end. Returns an empty list 
+            A list of Zone objects from start to end. Returns an empty list
             if no valid path is found.
         """
         distances = {zone: float("inf") for zone in self.graph.zones}
@@ -109,3 +110,20 @@ class PathFinder:
                     counter += 1
                     heapq.heappush(queue, (new_cost, counter, neighbor))
         return []
+
+    def dfs(self, current_zone, current_path, visited, end, all_paths):
+        for neighbor in self.get_neighbors(current_zone):
+            if neighbor == end:
+                all_paths.append(current_path + [neighbor])
+                continue
+            if neighbor not in visited:
+                visited.add(neighbor)
+                current_path.append(neighbor)
+                self.dfs(neighbor, current_path, visited, end, all_paths)
+                current_path.pop()
+                visited.remove(neighbor)
+
+    def find_all_paths(self, start, end) -> List[List[Zone]]:
+        all_paths = []
+        self.dfs(start, [start], {start}, end, all_paths)
+        return all_paths

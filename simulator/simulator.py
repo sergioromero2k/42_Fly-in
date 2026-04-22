@@ -24,10 +24,11 @@ class Simulator:
         self.turn: int = 0
 
         pathfinder = PathFinder(self.graph)
-        route = pathfinder.find_path(self.graph.start, self.graph.end)
+        paths = pathfinder.find_all_paths(self.graph.start, self.graph.end)
 
         for i in range(self.graph.nb_drones):
-            drone = Drone(i + 1, self.graph.start, route.copy())
+            route = paths[i % len(paths)]
+            drone = Drone(i+1, self.graph.start, route.copy())
             self.drones.append(drone)
 
     def run(self) -> None:
