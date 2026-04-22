@@ -2,6 +2,7 @@
 
 from parser.map_parser import Parser
 from simulator.simulator import Simulator
+from pathfinder.pathfinder import PathFinder
 
 
 def main() -> None:
@@ -17,9 +18,15 @@ def main() -> None:
     # print(graph_4)
 
     parser = Parser()
-    graph = parser.parse("maps/challenger/01_the_impossible_dream.txt")
+    graph = parser.parse("maps/hard/03_ultimate_challenge.txt")
     sim = Simulator(graph)
     sim.run()
+
+    # pf = PathFinder(graph)
+    # paths = pf.find_all_paths(graph.start, graph.end)
+    # print(f"Caminos encontrados: {len(paths)}")
+    # for path in paths:
+    #     print([z.name for z in path])
 
 
 if __name__ == "__main__":

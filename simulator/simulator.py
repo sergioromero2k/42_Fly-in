@@ -25,9 +25,20 @@ class Simulator:
 
         pathfinder = PathFinder(self.graph)
         paths = pathfinder.find_all_paths(self.graph.start, self.graph.end)
+        paths.sort(key=lambda p: len(p))
+        shortest = len(paths[0])
+        paths = [p for p in paths if len(p) <= shortest + 2]
+
+        if not paths:
+            paths = pathfinder.find_all_paths(self.graph.start, self.graph.end)
+            paths.sort(key=lambda p: len(p))
+
+        drones_per_path = [0] * len(paths)  # ← AQUÍ, después del filtro
 
         for i in range(self.graph.nb_drones):
-            route = paths[i % len(paths)]
+            min_index = drones_per_path.index(min(drones_per_path))
+            drones_per_path[min_index] += 1
+            route = paths[min_index]
             drone = Drone(i+1, self.graph.start, route.copy())
             self.drones.append(drone)
 
