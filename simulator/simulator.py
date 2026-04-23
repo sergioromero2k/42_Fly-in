@@ -5,6 +5,7 @@ from models.graph import Graph
 from models.zone import Zone
 from simulator.drone import Drone
 from pathfinder.pathfinder import PathFinder
+from visualizer.terminal import TerminalVisualizer
 from typing import List
 
 
@@ -22,6 +23,7 @@ class Simulator:
         self.graph = graph
         self.drones: List[Drone] = []
         self.turn: int = 0
+        self.visualizer = TerminalVisualizer(self.graph)
 
         pathfinder = PathFinder(self.graph)
         paths = pathfinder.find_all_paths(self.graph.start, self.graph.end)
@@ -50,7 +52,7 @@ class Simulator:
             self.turn += 1
             movements = self.compute_turn()
             if movements:
-                print(" ".join(movements))
+                self.visualizer.print_turn(self.turn, movements)
 
     def compute_turn(self) -> List:
         """
