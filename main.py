@@ -2,7 +2,6 @@
 
 from parser.map_parser import Parser
 from simulator.simulator import Simulator
-from pathfinder.pathfinder import PathFinder
 
 
 def main() -> None:
@@ -18,7 +17,7 @@ def main() -> None:
     # print(graph_4)
 
     parser = Parser()
-    graph = parser.parse("maps/hard/01_maze_nightmare.txt")
+    graph = parser.parse("maps/easy/01_linear_path.txt")
     sim = Simulator(graph)
     sim.run()
 
