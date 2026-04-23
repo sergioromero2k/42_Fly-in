@@ -6,6 +6,7 @@ from models.zone import Zone
 from simulator.drone import Drone
 from pathfinder.pathfinder import PathFinder
 from visualizer.terminal import TerminalVisualizer
+from visualizer.graph_display import GraphDisplay
 from typing import List
 
 
@@ -24,6 +25,7 @@ class Simulator:
         self.drones: List[Drone] = []
         self.turn: int = 0
         self.visualizer = TerminalVisualizer(self.graph)
+        self.display = GraphDisplay(graph)
 
         pathfinder = PathFinder(self.graph)
         paths = pathfinder.find_all_paths(self.graph.start, self.graph.end)
@@ -48,6 +50,7 @@ class Simulator:
         """
         Executes the simulation until all drones reach the end_hub.
         """
+        self.display.draw()
         while not all(drone.state == "arrived" for drone in self.drones):
             self.turn += 1
             movements = self.compute_turn()
