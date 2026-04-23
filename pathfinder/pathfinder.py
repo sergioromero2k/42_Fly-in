@@ -111,7 +111,14 @@ class PathFinder:
                     heapq.heappush(queue, (new_cost, counter, neighbor))
         return []
 
-    def dfs(self, current_zone, current_path, visited, end, all_paths):
+    def dfs(
+        self,
+        current_zone: Zone,
+        current_path: List[Zone],
+        visited: set[Zone],
+        end: Zone,
+        all_paths: List[List[Zone]],
+    ) -> None:
         for neighbor in self.get_neighbors(current_zone):
             if neighbor == end:
                 all_paths.append(current_path + [neighbor])
@@ -123,7 +130,7 @@ class PathFinder:
                 current_path.pop()
                 visited.remove(neighbor)
 
-    def find_all_paths(self, start, end) -> List[List[Zone]]:
-        all_paths = []
+    def find_all_paths(self, start: Zone, end: Zone) -> List[List[Zone]]:
+        all_paths: List[List[Zone]] = []
         self.dfs(start, [start], {start}, end, all_paths)
         return all_paths
