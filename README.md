@@ -20,6 +20,7 @@ Every algorithm, data structure, and simulation mechanic is implemented manually
 
 ```
 42_Fly-in/
+
 ├── main.py                  ← Entry point
 ├── Makefile                 ← Automation rules
 ├── requirements.txt         ← Python dependencies

@@ -14,6 +14,7 @@ class Parser:
         zone_type = "normal"
         color = None
         max_drones = 1
+        VALID_ZONE_TYPES = {"normal", "blocked", "restricted", "priority"}
 
         if len(parts) > 4:
             metadata_parts = parts[4:]
@@ -23,6 +24,8 @@ class Parser:
                 clave = parts_meta[0]
                 value = parts_meta[1]
                 if clave == "zone":
+                    if value not in VALID_ZONE_TYPES:
+                        raise ValueError(f"Error: invalid zone type '{value}'")
                     zone_type = value
                 elif clave == "color":
                     color = value
@@ -37,54 +40,61 @@ class Parser:
         start = None
         end = None
         nb_drones = 0
+        seen_connections = set()
 
-        try:
-            with open(filepath, "r", encoding="utf-8") as file:
-                for line in file:
-                    line = line.strip()
-                    if line.startswith("#"):
-                        continue
-                    elif line.startswith("nb_drones:"):
-                        parts = line.split()
-                        nb_drones = int(parts[1])
-                    elif line.startswith("start_hub:"):
-                        parts = line.split()
-                        start = self.parse_zone(parts)
-                        zones.append(start)
-                    elif line.startswith("end_hub:"):
-                        parts = line.split()
-                        end = self.parse_zone(parts)
-                        zones.append(end)
-                    elif line.startswith("hub:"):
-                        parts = line.split()
-                        zones.append(self.parse_zone(parts))
-                    elif line.startswith("connection:"):
-                        parts = line.split()
-                        names = parts[1].split("-")
-                        zona_a = next(
-                            (z for z in zones if z.name == names[0]), None)
-                        zona_b = next(
-                            (z for z in zones if z.name == names[1]), None)
+        with open(filepath, "r", encoding="utf-8") as file:
+            for line in file:
+                line = line.strip()
+                if line.startswith("#"):
+                    continue
+                elif line.startswith("nb_drones:"):
+                    parts = line.split()
+                    nb_drones = int(parts[1])
+                    if nb_drones <= 0:
+                        raise ValueError(
+                            "Error: nb_drones must be a positive integer.")
+                elif line.startswith("start_hub:"):
+                    parts = line.split()
+                    start = self.parse_zone(parts)
+                    zones.append(start)
+                elif line.startswith("end_hub:"):
+                    parts = line.split()
+                    end = self.parse_zone(parts)
+                    zones.append(end)
+                elif line.startswith("hub:"):
+                    parts = line.split()
+                    zones.append(self.parse_zone(parts))
+                elif line.startswith("connection:"):
+                    parts = line.split()
+                    names = parts[1].split("-")
 
-                        max_link_capacity = 1
-                        if len(parts) > 2:
-                            meta = parts[2].replace("[", "").replace("]", "")
-                            parts_meta = meta.split("=")
-                            if parts_meta[0] == "max_link_capacity":
-                                max_link_capacity = int(parts_meta[1])
+                    pair = frozenset([names[0], names[1]])
+                    if pair in seen_connections:
+                        raise ValueError(
+                            "Error: duplicate connection "
+                            f"'{names[0]}-{names[1]}'")
+                    seen_connections.add(pair)
+                    zona_a = next(
+                        (z for z in zones if z.name == names[0]), None)
+                    zona_b = next(
+                        (z for z in zones if z.name == names[1]), None)
 
-                        if zona_a is None:
-                            raise ValueError("Error: no zona_a")
-                        if zona_b is None:
-                            raise ValueError("Error: no zona_b")
+                    max_link_capacity = 1
+                    if len(parts) > 2:
+                        meta = parts[2].replace("[", "").replace("]", "")
+                        parts_meta = meta.split("=")
+                        if parts_meta[0] == "max_link_capacity":
+                            max_link_capacity = int(parts_meta[1])
 
-                        connections.append(
-                            Connection(zona_a, zona_b, max_link_capacity))
-        except FileNotFoundError:
-            print(
-                "Error! The file was not found. Check the path and filename.")
+                    if zona_a is None:
+                        raise ValueError("Error: no zona_a")
+                    if zona_b is None:
+                        raise ValueError("Error: no zona_b")
+
+                    connections.append(
+                        Connection(zona_a, zona_b, max_link_capacity))
         if start is None:
-            raise ValueError("Error: no start_nub in map file")
+            raise ValueError("Error: no start_hub in map file")
         if end is None:
             raise ValueError("Error: no end_hub found in map file")
 

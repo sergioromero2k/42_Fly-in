@@ -29,6 +29,11 @@ class Simulator:
 
         pathfinder = PathFinder(self.graph)
         paths = pathfinder.find_all_paths(self.graph.start, self.graph.end)
+
+        if not paths:
+            raise ValueError(
+                "Error: no valid path found between start and end.")
+
         paths.sort(key=lambda p: len(p))
         shortest = len(paths[0])
         paths = [p for p in paths if len(p) <= shortest + 2]
