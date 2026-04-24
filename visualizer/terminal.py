@@ -12,6 +12,13 @@ class TerminalVisualizer:
         "gray": "\033[90m",
         "orange": "\033[91m",
         "cyan": "\033[36m",
+        "brown": "\033[33m",
+        "lime": "\033[92m",
+        "gold": "\033[93m",
+        "purple": "\033[35m",
+        "magenta": "\033[35m",
+        "white": "\033[37m",
+        "black": "\033[30m",
         "reset": "\033[0m",
     }
 

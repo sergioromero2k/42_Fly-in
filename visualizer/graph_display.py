@@ -20,7 +20,7 @@ class GraphDisplay:
 
         for zone in self.graph.zones:
             color = zone.color if zone.color else "white"
-            ax.scatter(zone.x, zone.y, color=color, s=500, zorder=5)
+            ax.scatter(zone.x, zone.y, color=color, s=600, zorder=5)
             ax.text(
                 zone.x, zone.y + 0.2, zone.name, ha="center",
                 fontsize=8, zorder=10)

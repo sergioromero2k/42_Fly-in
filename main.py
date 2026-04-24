@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 from parser.map_parser import Parser
 from simulator.simulator import Simulator
 
@@ -16,8 +17,13 @@ def main() -> None:
     # print(graph_3)
     # print(graph_4)
 
+    if len(sys.argv) < 2:
+        print("Usage: python3 main.py <map_file>")
+        sys.exit(1)
+
     parser = Parser()
-    graph = parser.parse("maps/easy/01_linear_path.txt")
+    graph = parser.parse(sys.argv[1])
+    # graph = parser.parse("maps/easy/01_linear_path.txt")
     sim = Simulator(graph)
     sim.run()
 
