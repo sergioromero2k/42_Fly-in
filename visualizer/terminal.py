@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
+"""Module for terminal-based visual output of the drone simulation."""
 
 from models.graph import Graph
 
 
 class TerminalVisualizer:
+    """
+    Handles the colored text output in the terminal for simulation turns.
+
+    This class maps zone colors defined in the map file to ANSI escape codes,
+    allowing the simulation progress to be easily monitored in the console.
+
+    Attributes:
+        graph: The Graph instance used to look up zone metadata (colors).
+        COLORS: A dictionary mapping color names to ANSI escape sequences.
+    """
+
     COLORS = {
         "green": "\033[32m",
         "red": "\033[31m",
@@ -23,9 +35,25 @@ class TerminalVisualizer:
     }
 
     def __init__(self, graph: Graph):
+        """
+        Initializes the visualizer with the current graph.
+
+        Args:
+            graph: The Graph object containing the network data.
+        """
         self.graph = graph
 
     def get_color(self, zone_name: str) -> str:
+        """
+        Retrieves the ANSI color code for a specific zone.
+
+        Args:
+            zone_name: The name of the zone to look up.
+
+        Returns:
+            A string containing the ANSI escape code for the zone's color,
+            or the 'reset' code if no specific color is found.
+        """
         for zone in self.graph.zones:
             if zone_name == zone.name:
                 if zone.color:
@@ -33,6 +61,15 @@ class TerminalVisualizer:
         return self.COLORS["reset"]
 
     def print_turn(self, turn: int, movements: list[str]) -> None:
+        """
+        Prints the movements of a single turn to the terminal with colors.
+
+        Output format: Turn X: D1-ZoneA D2-ZoneB ...
+
+        Args:
+            turn: The current turn number.
+            movements: A list of strings in the format 'D<id>-<zone_name>'.
+        """
         print(f"Turn {turn}: ", end="")
         for movement in movements:
             zone_name = movement.split("-")[1]

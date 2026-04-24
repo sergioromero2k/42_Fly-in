@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module defining the Drone entity and its state within the simulation."""
 
 from models.zone import Zone
 from typing import List
@@ -6,7 +7,7 @@ from typing import List
 
 class Drone:
     """
-    Represents an autonomous dron within the simulation.
+    Represents an autonomous drone within the simulation.
 
     Attributes:
         id (int): Unique identifier for the drone.

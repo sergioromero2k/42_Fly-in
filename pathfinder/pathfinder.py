@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module for drone pathfinding and routing logic."""
 
 from models.zone import Zone
 from models.graph import Graph
@@ -10,8 +11,11 @@ class PathFinder:
     """
     Algorithm provider for finding the most efficient routes for drones.
 
-    This class implements a weighted search (Dijkstra) to account for
-    different zone costs (restricted vs normal).
+    This class implements search algorithms to navigate the zone network,
+    accounting for movement costs, zone types, and connectivity.
+
+    Attributes:
+        graph: A validated Graph instance representing the drone network.
     """
 
     def __init__(self, graph: Graph) -> None:
@@ -32,6 +36,7 @@ class PathFinder:
 
         Returns:
             A list of accessible Zone objects connected to the input zone.
+            Zones of type 'blocked' are excluded.
         """
         neighbors = []
         for connection in self.graph.connections:
@@ -46,16 +51,17 @@ class PathFinder:
         return neighbors
 
     def get_cost(self, zone: Zone) -> float:
-        """Determines the movement cost (turns) based on the zone type.
+        """
+        Determines the movement cost (turns) based on the zone type.
 
         Args:
             zone: The destination zone to evaluate.
 
         Returns:
-            An integer representing the cost in turns:
+            The cost in simulation turns:
             - 2 for 'restricted' zones.
             - 1 for 'normal' or 'priority' zones.
-            - 999999 for 'blocked' zones.
+            - A very high value (infinity) for 'blocked' zones.
         """
         if zone.zone_type == "normal":
             return 1
@@ -71,13 +77,16 @@ class PathFinder:
         """
         Computes the shortest path between two hubs using Dijkstra's algorithm.
 
+        This implementation accounts for weighted movement costs
+        associated with different zone types.
+
         Args:
             start: The starting hub (start_hub).
             end: The destination hub (end_hub).
 
         Returns:
-            A list of Zone objects from start to end. Returns an empty list
-            if no valid path is found.
+            A list of Zone objects from start to end representing the optimal
+            path. Returns an empty list if no valid path is found.
         """
         distances = {zone: float("inf") for zone in self.graph.zones}
         distances[start] = 0
@@ -119,6 +128,16 @@ class PathFinder:
         end: Zone,
         all_paths: List[List[Zone]],
     ) -> None:
+        """
+        Performs a Depth-First Search to find all possible simple paths.
+
+        Args:
+            current_zone: The zone being currently explored.
+            current_path: The sequence of zones traversed so far.
+            visited: Set of zones already in the current path to avoid cycles.
+            end: The target destination zone.
+            all_paths: A list to store all discovered valid paths.
+        """
         for neighbor in self.get_neighbors(current_zone):
             if neighbor == end:
                 all_paths.append(current_path + [neighbor])
@@ -131,6 +150,18 @@ class PathFinder:
                 visited.remove(neighbor)
 
     def find_all_paths(self, start: Zone, end: Zone) -> List[List[Zone]]:
+        """
+        Finds all non-cyclic paths from start to end.
+        Useful for distributing drones across multiple paths to maximize
+        throughput.
+
+        Args:
+            start: The starting hub.
+            end: The destination hub.
+
+        Returns:
+            A list containing all valid paths (each path is a list of Zones).
+        """
         all_paths: List[List[Zone]] = []
         self.dfs(start, [start], {start}, end, all_paths)
         return all_paths

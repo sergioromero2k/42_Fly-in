@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""Main simulation engine for drone fleet management."""
 
 from models.graph import Graph
 from models.zone import Zone
@@ -12,15 +12,29 @@ from typing import List
 
 class Simulator:
     """
-    Manages the drone simulation, hadling turn-by-turn movement and scheduling.
+    Manages the drone simulation, handling turn-by-turn
+    movement and scheduling.
+
+    This class coordinates the pathfinding, drone deployment, and the
+    enforcement of movement constraints (like zone capacity) over time.
 
     Attributes:
-        graph (Graph): The droen network topology and constraints.
-        drones (List[Drone]): List of active drones in the simulation.
-        turn (int): The current simulation turn count.
+        graph: The Graph instance representing the network topology.
+        drones: List of Drone objects active in the simulation.
+        turn: Current simulation turn counter.
+        visualizer: Component for terminal-based output.
+        display: Component for graphical representation.
     """
 
     def __init__(self, graph: Graph) -> None:
+        """Initializes the simulator and schedules drone paths.
+
+        Args:
+            graph: A validated Graph object.
+
+        Raises:
+            ValueError: If no valid paths exist between start and end hubs.
+        """
         self.graph = graph
         self.drones: List[Drone] = []
         self.turn: int = 0
@@ -53,7 +67,10 @@ class Simulator:
 
     def run(self) -> None:
         """
-        Executes the simulation until all drones reach the end_hub.
+        Executes the simulation loop until all drones reach the destination.
+
+        The loop runs turn-by-turn, calculating movements
+            and updating visualizers.
         """
         self.display.draw()
         while not all(drone.state == "arrived" for drone in self.drones):
@@ -61,10 +78,20 @@ class Simulator:
             movements = self.compute_turn()
             if movements:
                 self.visualizer.print_turn(self.turn, movements)
+        print("Simulation complete!")
+        print("Total turns: ", self.turn)
+        print(f"Drones delivered: {
+            self.graph.nb_drones}/{self.graph.nb_drones}")
 
     def compute_turn(self) -> List:
         """
-        Caclulates movements for the current turn respecting capacities.
+        Calculates valid movements for the current turn.
+
+        This method checks zone capacities and moves drones to their next
+        destination if allowed.
+
+        Returns:
+            A list of strings formatted as 'D<id>-<zone_name>' for the output.
         """
         ocupation: dict[Zone, int] = self.get_ocupation()
         movemts = []
@@ -85,7 +112,10 @@ class Simulator:
 
     def get_ocupation(self) -> dict[Zone, int]:
         """
-        Returns the current number of drones in each zone.
+        Calculates the current number of drones in each zone.
+
+        Returns:
+            A dictionary mapping Zone objects to the number of drones present.
         """
         ocupation: dict[Zone, int] = {}
         for drone in self.drones:
@@ -96,7 +126,14 @@ class Simulator:
 
     def can_move(self, next_zone: Zone, ocupation: dict[Zone, int]) -> bool:
         """
-        Validates if a move to next_node is allowed under project rules.
+        Validates if a move is legal according to zone and capacity rules.
+
+        Args:
+            next_zone: The Zone the drone is attempting to enter.
+            occupation: Current count of drones per zone in this turn.
+
+        Returns:
+            True if the move is allowed, False otherwise.
         """
         if next_zone.zone_type == "blocked":
             return False

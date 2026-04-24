@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""Module for parsing drone network configuration files."""
 from models.zone import Zone
 from models.connection import Connection
 from models.graph import Graph
@@ -7,7 +7,19 @@ from typing import List
 
 
 class Parser:
+    """Class responsible for parsing map files into a Graph object."""
     def parse_zone(self, parts: List[str]) -> Zone:
+        """Parses a zone definition line and extracts metadata.
+
+        Args:
+            parts: A list of strings representing the split line from the file.
+
+        Returns:
+            A Zone object populated with the parsed data.
+
+        Raises:
+            ValueError: If an invalid zone type is encountered.
+        """
         name = parts[1]
         x = int(parts[2])
         y = int(parts[3])
@@ -35,6 +47,20 @@ class Parser:
         return Zone(name, x, y, zone_type, color, max_drones)
 
     def parse(self, filepath: str) -> Graph:
+        """Reads a file and constructs the Graph
+            representing the drone network.
+
+        Args:
+            filepath: Path to the input map file.
+
+        Returns:
+            A fully initialized Graph object.
+
+        Raises:
+            ValueError: If parsing fails due to syntax errors, missing hubs,
+                duplicate connections, or invalid drone counts.
+            FileNotFoundError: If the specified file does not exist.
+        """
         zones = []
         connections = []
         start = None
