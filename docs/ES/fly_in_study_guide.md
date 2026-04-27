@@ -329,4 +329,4 @@ main.py
 | Medium 3 — Priority puzzle | 4 | ≤ 12 | 7 | ✅ |
 | Hard 1 — Maze nightmare | 8 | ≤ 45 | 22 | ✅ |
 | Hard 2 — Capacity hell | 12 | ≤ 60 | 33 | ✅ |
-| Hard 3 — Ultimate challenge | 15 | ≤ 35 | 40 | ⚠️ |
+| Hard 3 — Ultimate challenge | 15 | ≤ 35 | 28 | ✅ |

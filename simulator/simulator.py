@@ -8,6 +8,7 @@ from pathfinder.pathfinder import PathFinder
 from visualizer.terminal import TerminalVisualizer
 from visualizer.graph_display import GraphDisplay
 from typing import List
+from collections import Counter
 
 
 class Simulator:
@@ -27,13 +28,23 @@ class Simulator:
     """
 
     def __init__(self, graph: Graph) -> None:
-        """Initializes the simulator and schedules drone paths.
+        """
+        Initializes the simulator and schedules drone paths
+            using bottleneck analysis.
+
+        This constructor finds all available paths and implements a selection
+        strategy that identifies potential bottlenecks
+            (zones with max_drone=1).
+        It prioritizes paths that efficiently distribute the load across these
+        bottlenecks and then balances the drone fleet among
+            the most optimal routes.
 
         Args:
-            graph: A validated Graph object.
+            graph: A validated Graph object representing the network topology.
 
         Raises:
-            ValueError: If no valid paths exist between start and end hubs.
+            ValueError: If no valid path is found between
+                the start and end hubs.
         """
         self.graph = graph
         self.drones: List[Drone] = []
@@ -48,6 +59,22 @@ class Simulator:
             raise ValueError(
                 "Error: no valid path found between start and end.")
 
+        zone_count: Counter[str] = Counter()
+        for path in paths:
+            for zone in path:
+                if zone.max_drone == 1:
+                    zone_count[zone.name] += 1
+
+        bottlenecks = [name for name, count in zone_count.most_common(3)]
+        best_paths = []
+        for bottleneck in bottlenecks:
+            group = [p for p in paths if any(z.name == bottleneck for z in p)]
+            if group:
+                group.sort(key=lambda p: len(p))
+                best_paths.append(group[0])
+
+        paths = best_paths if best_paths else paths
+
         paths.sort(key=lambda p: len(p))
         shortest = len(paths[0])
         paths = [p for p in paths if len(p) <= shortest + 2]
@@ -56,7 +83,7 @@ class Simulator:
             paths = pathfinder.find_all_paths(self.graph.start, self.graph.end)
             paths.sort(key=lambda p: len(p))
 
-        drones_per_path = [0] * len(paths)  # ← AQUÍ, después del filtro
+        drones_per_path = [0] * len(paths)
 
         for i in range(self.graph.nb_drones):
             min_index = drones_per_path.index(min(drones_per_path))
@@ -87,7 +114,7 @@ class Simulator:
         arrived = sum(1 for drone in self.drones if drone.state == "arrived")
         print(f"Drones delivered: {arrived}/{self.graph.nb_drones}")
 
-    def compute_turn(self) -> List:
+    def compute_turn(self) -> List[str]:
         """
         Calculates valid movements for the current turn.
 
