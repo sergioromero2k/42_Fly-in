@@ -17,6 +17,8 @@ BIN = $(ENV)/bin/python
 
 # Terminal Colors
 GREEN = \033[0;32m
+RED = \033[0;31m
+RESET = \033[0m
 NC = \033[0m
 
 .PHONY: all install run debug clean lint re
@@ -28,8 +30,7 @@ install:
 	@echo "$(GREEN)Setting up virtual environment and dependencies...$(NC)"
 	$(PYTHON) -m venv $(ENV)
 	$(ENV)/bin/$(PIP) install --upgrade pip
-	$(ENV)/bin/$(PIP) install flake8 mypy
-	@if [ -f requirements.txt ]; then $(ENV)/bin/$(PIP) install -r requirements.txt; fi
+	$(ENV)/bin/$(PIP) install flake8 mypy matplotlib
 
 # Main program execution
 # Usage: make run MAP=maps/easy_map.txt
@@ -48,6 +49,12 @@ lint:
 	@echo "$(GREEN)Running Mypy type check...$(NC)"
 	$(ENV)/bin/mypy $(SRC) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
+lint-strict:
+	@echo "$(GREEN)Running Flake8 strict...$(NC)"
+	$(ENV)/bin/flake8 . --exclude=venv
+	@echo "$(GREEN)Running Mypy strict...$(NC)"
+	$(ENV)/bin/mypy . --strict --exclude venv
+
 # Cleanup of temporary files and cache
 clean:
 	@echo "$(GREEN)Cleaning up...$(NC)"
@@ -58,3 +65,5 @@ clean:
 
 # Re-install everything from scratch
 re: clean all
+
+.PHONY: all install run debug clean lint lint-strict re
