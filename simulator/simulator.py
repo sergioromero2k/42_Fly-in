@@ -102,6 +102,8 @@ class Simulator:
             if drone.path_index + 1 < len(drone.path):
                 next_zone = drone.path[drone.path_index + 1]
                 if self.can_move(next_zone, ocupation):
+                    ocupation[drone.current_zone] = ocupation.get(
+                        drone.current_zone, 0) - 1
                     ocupation[next_zone] = ocupation.get(next_zone, 0) + 1
                     drone.current_zone = next_zone
                     drone.path_index += 1
