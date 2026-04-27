@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Module for graphical representation of the drone
-    network using Matplotlib."""
+network using Matplotlib."""
 
 import matplotlib.pyplot as plt
 from models.graph import Graph
@@ -16,6 +16,7 @@ class GraphDisplay:
     Attributes:
         graph: The Graph instance containing zones and connections to display.
     """
+
     def __init__(self, graph: Graph) -> None:
         """
         Initializes the display with a specific graph.
@@ -43,10 +44,9 @@ class GraphDisplay:
             ax.plot([x1, x2], [y1, y2], "k-")
 
         for zone in self.graph.zones:
-            color = zone.color if zone.color else "white"
-            ax.scatter(zone.x, zone.y, color=color, s=600, zorder=5)
-            ax.text(
-                zone.x, zone.y + 0.2, zone.name, ha="center",
-                fontsize=8, zorder=10)
-
+            try:
+                color = zone.color if zone.color else "white"
+                ax.scatter(zone.x, zone.y, color=color, s=500, zorder=5)
+            except ValueError:
+                ax.scatter(zone.x, zone.y, color="white", s=500, zorder=5)
         plt.show()

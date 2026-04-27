@@ -32,6 +32,11 @@ class TerminalVisualizer:
         "white": "\033[37m",
         "black": "\033[30m",
         "reset": "\033[0m",
+        "maroon": "\033[31m",
+        "darkred": "\033[31m",
+        "violet": "\033[35m",
+        "crimson": "\033[31m",
+        "rainbow": "\033[93m",
     }
 
     def __init__(self, graph: Graph):

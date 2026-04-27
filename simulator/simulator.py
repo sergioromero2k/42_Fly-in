@@ -73,15 +73,19 @@ class Simulator:
             and updating visualizers.
         """
         self.display.draw()
+        max_turns = 1000
         while not all(drone.state == "arrived" for drone in self.drones):
             self.turn += 1
+            if self.turn > max_turns:
+                print(f"Warning: simulation stopped at {max_turns} turns")
+                break
             movements = self.compute_turn()
             if movements:
                 self.visualizer.print_turn(self.turn, movements)
         print("Simulation complete!")
         print("Total turns: ", self.turn)
-        print(f"Drones delivered: {
-            self.graph.nb_drones}/{self.graph.nb_drones}")
+        arrived = sum(1 for drone in self.drones if drone.state == "arrived")
+        print(f"Drones delivered: {arrived}/{self.graph.nb_drones}")
 
     def compute_turn(self) -> List:
         """
