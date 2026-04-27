@@ -20,15 +20,23 @@ Every algorithm, data structure, and simulation mechanic is implemented manually
 
 ```
 42_Fly-in/
-
 ├── main.py                  ← Entry point
 ├── Makefile                 ← Automation rules
 ├── requirements.txt         ← Python dependencies
+├── LICENSE
+├── README.md
+├── docs/
+│   ├── en.subject.pdf       ← Original subject
+│   └── ES/
+│       ├── flyin_plan.html          ← Development plan
+│       ├── fly_in_study_guide.md    ← Peer review study guide
+│       └── challenger_guide.md     ← Challenger notes
 ├── maps/
 │   ├── easy/                ← 3 easy maps (2–4 drones)
 │   ├── medium/              ← 3 medium maps (4–6 drones)
 │   ├── hard/                ← 3 hard maps (8–15 drones)
-│   └── challenger/          ← 1 optional extreme map (25 drones)
+│   ├── challenger/          ← 1 optional extreme map (25 drones)
+│   └── edge_cases/          ← Custom maps for parser edge case testing
 ├── models/
 │   ├── zone.py              ← Zone class (node)
 │   ├── connection.py        ← Connection class (edge)
@@ -36,7 +44,7 @@ Every algorithm, data structure, and simulation mechanic is implemented manually
 ├── parser/
 │   └── map_parser.py        ← Parses .txt map files into Graph objects
 ├── pathfinder/
-│   └── pathfinder.py        ← Dijkstra + DFS find_all_paths
+│   └── pathfinder.py        ← Dijkstra + DFS + bottleneck detection
 ├── simulator/
 │   ├── drone.py             ← Drone class (state machine)
 │   └── simulator.py         ← Turn-by-turn simulation engine
@@ -144,6 +152,8 @@ A tie-breaking counter prevents comparison errors between Zone objects in the he
 
 **Complexity:** `O((V + E) log V)` where V = zones, E = connections.
 
+---
+
 ### Multi-path Discovery — DFS with Backtracking
 
 The `find_all_paths` method uses **Depth-First Search with backtracking** to enumerate
@@ -154,14 +164,25 @@ across multiple routes simultaneously.
 Dijkstra finds the single optimal path. To find ALL paths, we need DFS — it explores
 every branch and backtracks when it reaches a dead end or the goal.
 
-### Route Assignment — Greedy Scheduling
+---
 
-Once all paths are found, drones are assigned using a **greedy strategy**:
+### Route Assignment — Greedy Scheduling + Bottleneck Detection
+
+Once all paths are found, the simulator applies a two-step strategy:
+
+**Step 1 — Bottleneck Detection:**
+The simulator automatically identifies the most critical bottleneck zones — zones with
+`max_drones=1` that appear most frequently across all paths. Using a `Counter`, it
+finds the top 3 bottlenecks and selects the shortest path that passes through each one.
+This ensures drones are distributed across parallel routes instead of all competing
+for the same zone.
+
+**Step 2 — Greedy Assignment:**
 1. Sort all paths by length (shortest first)
-2. Filter out paths longer than `shortest + 2` to avoid inefficient routes
+2. Filter out paths longer than `shortest + 2`
 3. Assign each drone to the path with the fewest drones currently assigned
 
-This approach minimizes congestion by distributing the fleet across the best available routes.
+---
 
 ### Simulation Engine — Turn-by-turn
 
@@ -169,14 +190,30 @@ The `Simulator` class runs a discrete turn-based loop:
 
 1. **Compute occupancy** — count drones per zone
 2. **For each drone** — check if next zone has capacity
-3. **Move or wait** — update position and state
+3. **Move or wait** — update position, decrement old zone, increment new zone
 4. **Print output** — format `D<ID>-<zone>` per turn
 
-**Key rule:** Drones leaving a zone free up capacity **on that same turn**, allowing
-following drones to enter immediately.
+**Key rule:** Drones leaving a zone free up capacity **on that same turn**.
+This is implemented by decrementing the occupancy of the current zone immediately
+when a drone moves, allowing following drones to enter in the same turn.
 
-**Deadlock prevention:** Drones that cannot move simply wait — they are omitted from
-the turn output as required by the specification.
+---
+
+### Challenger — The Impossible Dream (39 turns)
+
+The challenger map has 25 drones and 6454 possible paths. The critical bottleneck
+is that all paths converge through `micro_gate1`, `micro_gate2` or `micro_gate3`
+— each with `max_drones=1`.
+
+Without optimization, all drones flood through `micro_gate1`, creating an impossible
+bottleneck. The bottleneck detection algorithm automatically identifies the 3 micro_gates
+as the most critical zones and assigns drones evenly across all three:
+
+```
+3 micro_gates × 1 drone/turn = 3 drones/turn throughput
+25 drones ÷ 3 = ~9 turns minimum to pass all drones
+Result: 39 turns — beats the reference record of 45 turns
+```
 
 ---
 
@@ -184,15 +221,16 @@ the turn output as required by the specification.
 
 | Map | Drones | Target | Result | Status |
 |-----|--------|--------|--------|--------|
-| Easy 1 — Linear path | 2 | ≤ 6 | 5 | SI |
-| Easy 2 — Simple fork | 3 | ≤ 6 | 5 | SI |
-| Easy 3 — Basic capacity | 4 | ≤ 8 | 5 | SI |
-| Medium 1 — Dead end trap | 5 | ≤ 15 | 12 | SI |
-| Medium 2 — Circular loop | 6 | ≤ 20 | 20 | SI |
-| Medium 3 — Priority puzzle | 4 | ≤ 12 | 7 | SI |
-| Hard 1 — Maze nightmare | 8 | ≤ 45 | 22 | SI |
-| Hard 2 — Capacity hell | 12 | ≤ 60 | 33 | SI |
-| Hard 3 — Ultimate challenge | 15 | ≤ 35 | 40 | ERROR |
+| Easy 1 — Linear path | 2 | ≤ 6 | 4 | SI |
+| Easy 2 — Simple fork | 3 | ≤ 6 | 4 | SI |
+| Easy 3 — Basic capacity | 4 | ≤ 8 | 4 | SI |
+| Medium 1 — Dead end trap | 5 | ≤ 15 | 8 | SI |
+| Medium 2 — Circular loop | 6 | ≤ 20 | 13 | SI |
+| Medium 3 — Priority puzzle | 4 | ≤ 12 | 6 | SI |
+| Hard 1 — Maze nightmare | 8 | ≤ 45 | 15 | SI |
+| Hard 2 — Capacity hell | 12 | ≤ 60 | 20 | SI |
+| Hard 3 — Ultimate challenge | 15 | ≤ 35 | 28 | SI BONUS |
+| Challenger — Impossible Dream | 25 | ≤ 45 | 39 | SI BONUS |
 
 ---
 
