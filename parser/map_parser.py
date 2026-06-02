@@ -5,9 +5,12 @@ from models.connection import Connection
 from models.graph import Graph
 from typing import List
 
+MAX_VALUE = 1000
+
 
 class Parser:
     """Class responsible for parsing map files into a Graph object."""
+
     def parse_zone(self, parts: List[str]) -> Zone:
         """Parses a zone definition line and extracts metadata.
 
@@ -21,8 +24,16 @@ class Parser:
             ValueError: If an invalid zone type is encountered.
         """
         name = parts[1]
-        x = int(parts[2])
-        y = int(parts[3])
+        if "-" in name or " " in name:
+            raise ValueError(
+                f"Error: zone name '{name}' cannot contain dashes or spaces."
+            )
+
+        try:
+            x = int(parts[2])
+            y = int(parts[3])
+        except ValueError:
+            raise ValueError("Error: zone coordinates must be valid integers.")
         zone_type = "normal"
         color = None
         max_drones = 1
@@ -33,6 +44,11 @@ class Parser:
             for meta in metadata_parts:
                 meta = meta.replace("[", "").replace("]", "")
                 parts_meta = meta.split("=")
+                if len(parts_meta) != 2:
+                    raise ValueError(
+                        f"Error: invalid metada format '{meta}', "
+                        "expected 'key=value'"
+                    )
                 clave = parts_meta[0]
                 value = parts_meta[1]
                 if clave == "zone":
@@ -42,7 +58,18 @@ class Parser:
                 elif clave == "color":
                     color = value
                 elif clave == "max_drones":
-                    max_drones = int(value)
+                    try:
+                        max_drones = int(value)
+                    except ValueError:
+                        raise ValueError(
+                            "Error: max_drones must be valid integers.")
+                    if max_drones <= 0:
+                        raise ValueError(
+                            "Error: max_drones must be a positive integer.")
+                    if max_drones > MAX_VALUE:
+                        raise ValueError(
+                            f"Error: max_drones cannot exceed {MAX_VALUE}."
+                        )
 
         return Zone(name, x, y, zone_type, color, max_drones)
 
@@ -67,6 +94,7 @@ class Parser:
         end = None
         nb_drones = 0
         seen_connections = set()
+        seen_zones = set()
 
         with open(filepath, "r", encoding="utf-8") as file:
             for line in file:
@@ -75,21 +103,42 @@ class Parser:
                     continue
                 elif line.startswith("nb_drones:"):
                     parts = line.split()
-                    nb_drones = int(parts[1])
+                    try:
+                        nb_drones = int(parts[1])
+                    except ValueError:
+                        raise ValueError(
+                            "Error: nb_drones must be a valid integer.")
                     if nb_drones <= 0:
                         raise ValueError(
                             "Error: nb_drones must be a positive integer.")
+                    if nb_drones > MAX_VALUE:
+                        raise ValueError(
+                            f"Error: nb_drones cannot exceed {MAX_VALUE}."
+                        )
                 elif line.startswith("start_hub:"):
                     parts = line.split()
                     start = self.parse_zone(parts)
+                    if start.name in seen_zones:
+                        raise ValueError(
+                            f"Error: duplicate zone name '{start.name}'")
+                    seen_zones.add(start.name)
                     zones.append(start)
                 elif line.startswith("end_hub:"):
                     parts = line.split()
                     end = self.parse_zone(parts)
+                    if end.name in seen_zones:
+                        raise ValueError(
+                            f"Error: duplicate zone name '{end.name}'")
+                    seen_zones.add(end.name)
                     zones.append(end)
                 elif line.startswith("hub:"):
                     parts = line.split()
-                    zones.append(self.parse_zone(parts))
+                    zone = self.parse_zone(parts)
+                    if zone.name in seen_zones:
+                        raise ValueError(
+                            f"Error: duplicate zone name '{zone.name}'")
+                    seen_zones.add(zone.name)
+                    zones.append(zone)
                 elif line.startswith("connection:"):
                     parts = line.split()
                     names = parts[1].split("-")
@@ -110,12 +159,26 @@ class Parser:
                         meta = parts[2].replace("[", "").replace("]", "")
                         parts_meta = meta.split("=")
                         if parts_meta[0] == "max_link_capacity":
-                            max_link_capacity = int(parts_meta[1])
-
+                            try:
+                                max_link_capacity = int(parts_meta[1])
+                            except ValueError:
+                                raise ValueError(
+                                    "Error: max_link_capacity "
+                                    "must be valid integers")
+                            if max_link_capacity <= 0:
+                                raise ValueError(
+                                    "Error: max_link_capacity must be"
+                                    " a positive integer.")
+                            if max_link_capacity > MAX_VALUE:
+                                raise ValueError(
+                                    "Error: max_link_capacity "
+                                    f"cannot exceed {MAX_VALUE}.")
                     if zona_a is None:
-                        raise ValueError("Error: no zona_a")
+                        raise ValueError(
+                            f"Error: unknown zone '{names[0]}' in connection")
                     if zona_b is None:
-                        raise ValueError("Error: no zona_b")
+                        raise ValueError(
+                            f"Error: unknown zone '{names[1]}' in connection")
 
                     connections.append(
                         Connection(zona_a, zona_b, max_link_capacity))
