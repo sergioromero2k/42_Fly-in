@@ -18,6 +18,7 @@ BIN = $(ENV)/bin/python
 # Terminal Colors
 GREEN = \033[0;32m
 RED = \033[0;31m
+BLUE=\033[0;34m
 RESET = \033[0m
 NC = \033[0m
 
@@ -58,6 +59,13 @@ lint-strict:
 # Cleanup of temporary files and cache
 clean:
 	@echo "$(GREEN)Cleaning up...$(NC)"
+	rm -rf $(ENV)
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+	find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
+
+fclean:
+	@echo "$(BLUE)Cleaning up...$(NC)"
 	rm -rf $(ENV)
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
