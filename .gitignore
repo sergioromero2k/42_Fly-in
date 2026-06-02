@@ -32,6 +32,3 @@ share/python-wheels/
 .DS_Store
 *.log
 
-# Test programs (Recommended to exclude as per subject)
-tests/
-test_*.py
