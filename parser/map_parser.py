@@ -93,7 +93,7 @@ class Parser:
                         tokens[1], "nb_drones")
                 elif line.startswith(("start_hub:", "end_hub:", "hub:")):
                     name_match = re.search(
-                        r'(?:start_hub|end_hub|hub):\s+(.+?)\s+\d+\s+\d+',
+                        r'(?:start_hub|end_hub|hub):\s+(.+?)\s+-?\d+\s+-?\d+',
                         line)
                     if not name_match:
                         raise ValueError(

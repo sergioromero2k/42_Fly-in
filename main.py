@@ -23,14 +23,11 @@ def main() -> None:
         graph = parser.parse(sys.argv[1])
         sim = Simulator(graph)
         sim.run()
-    except FileNotFoundError:
-        print(f"Error: file '{sys.argv[1]}' not found.")
-        sys.exit(1)
-    except ValueError as e:
+    except (ValueError, FileNotFoundError) as e:
         print(e)
         sys.exit(1)
     except Exception as e:
-        print(e)
+        print(f"Unexpected error: {e}")
         sys.exit(1)
 
 

@@ -24,6 +24,8 @@ class Drone:
         self.path = path
         self.path_index = 0
         self.state = "waiting"
+        self.wait = 0
+        self.next_zone: Zone | None = None 
 
     def __str__(self) -> str:
         return (

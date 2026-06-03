@@ -115,42 +115,59 @@ class Simulator:
         print(f"Drones delivered: {arrived}/{self.graph.nb_drones}")
 
 
+
     def compute_turn(self) -> List[str]:
-        """
-        Calculates valid movements for the current turn.
-
-        This method checks zone capacities and moves drones to their next
-        destination if allowed.
-
-        Returns:
-            A list of strings formatted as 'D<id>-<zone_name>' for the output.
-        """
         ocupation: dict[Zone, int] = self.get_ocupation()
         conn_usage: dict = {}
-        movemts = []
+        movements = []
 
         for drone in self.drones:
             if drone.state == "arrived":
                 continue
+
+            # CASO 1: dron en tránsito hacia restricted
+            if drone.wait > 0:
+                drone.wait -= 1
+                if drone.wait == 0 and drone.next_zone is not None:
+                    # llega a la zona restricted
+                    drone.current_zone = drone.next_zone
+                    drone.path_index += 1
+                    drone.next_zone = None
+                    movements.append(f"D{drone.id}-{drone.current_zone.name}")
+                    if drone.current_zone == self.graph.end:
+                        drone.state = "arrived"
+                continue
+
+            # CASO 2: dron en tierra intenta moverse
             if drone.path_index + 1 < len(drone.path):
                 next_zone = drone.path[drone.path_index + 1]
                 connection = self.get_connection(drone.current_zone, next_zone)
+
                 if self.can_move(next_zone, ocupation, connection, conn_usage):
+                    if connection:
+                        pair = frozenset([connection.zone_a, connection.zone_b])
+                        conn_usage[pair] = conn_usage.get(pair, 0) + 1
                     ocupation[drone.current_zone] = ocupation.get(
                         drone.current_zone, 0) - 1
                     ocupation[next_zone] = ocupation.get(next_zone, 0) + 1
-                    if connection:
-                        pair = frozenset([drone.current_zone, next_zone])
-                        conn_usage[pair] = conn_usage.get(pair, 0) + 1
-                    drone.current_zone = next_zone
-                    drone.path_index += 1
-                    movemts.append(f"D{drone.id}-{next_zone.name}")
-                    if next_zone == self.graph.end:
-                        drone.state = "arrived"
-        return movemts
+
+                    if next_zone.zone_type == "restricted":
+                        # entra a la conexión, llega el próximo turno
+                        drone.wait = 1
+                        drone.next_zone = next_zone
+                        conn_name = f"{drone.current_zone.name}_{next_zone.name}"
+                        movements.append(f"D{drone.id}-{conn_name}")
+                    else:
+                        drone.current_zone = next_zone
+                        drone.path_index += 1
+                        movements.append(f"D{drone.id}-{next_zone.name}")
+                        if next_zone == self.graph.end:
+                            drone.state = "arrived"
+
+        return movements
 
     def get_connection(self, zone_a: Zone, zone_b: Zone):
-        """You need to track how many connections are in use each turn."""
+        """Returns the Connection object between two zones, or None if not found."""
         for connection in self.graph.connections:
             if (connection.zone_a == zone_a and connection.zone_b == zone_b) or \
             (connection.zone_b == zone_a and connection.zone_a == zone_b):
