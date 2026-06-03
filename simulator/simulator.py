@@ -100,10 +100,10 @@ class Simulator:
             and updating visualizers.
         """
         self.display.draw()
-        max_turns = 1000
+        max_turns = 1000 # Filter >1000
         while not all(drone.state == "arrived" for drone in self.drones):
             self.turn += 1
-            if self.turn > max_turns:
+            if self.turn > max_turns: # Filter >1000
                 print(f"Warning: simulation stopped at {max_turns} turns")
                 break
             movements = self.compute_turn()
@@ -113,6 +113,7 @@ class Simulator:
         print("Total turns: ", self.turn)
         arrived = sum(1 for drone in self.drones if drone.state == "arrived")
         print(f"Drones delivered: {arrived}/{self.graph.nb_drones}")
+
 
     def compute_turn(self) -> List[str]:
         """
@@ -125,6 +126,7 @@ class Simulator:
             A list of strings formatted as 'D<id>-<zone_name>' for the output.
         """
         ocupation: dict[Zone, int] = self.get_ocupation()
+        conn_usage: dict = {}
         movemts = []
 
         for drone in self.drones:
@@ -132,16 +134,28 @@ class Simulator:
                 continue
             if drone.path_index + 1 < len(drone.path):
                 next_zone = drone.path[drone.path_index + 1]
-                if self.can_move(next_zone, ocupation):
+                connection = self.get_connection(drone.current_zone, next_zone)
+                if self.can_move(next_zone, ocupation, connection, conn_usage):
                     ocupation[drone.current_zone] = ocupation.get(
                         drone.current_zone, 0) - 1
                     ocupation[next_zone] = ocupation.get(next_zone, 0) + 1
+                    if connection:
+                        pair = frozenset([drone.current_zone, next_zone])
+                        conn_usage[pair] = conn_usage.get(pair, 0) + 1
                     drone.current_zone = next_zone
                     drone.path_index += 1
                     movemts.append(f"D{drone.id}-{next_zone.name}")
                     if next_zone == self.graph.end:
                         drone.state = "arrived"
         return movemts
+
+    def get_connection(self, zone_a: Zone, zone_b: Zone):
+        """You need to track how many connections are in use each turn."""
+        for connection in self.graph.connections:
+            if (connection.zone_a == zone_a and connection.zone_b == zone_b) or \
+            (connection.zone_b == zone_a and connection.zone_a == zone_b):
+                return connection
+        return None
 
     def get_ocupation(self) -> dict[Zone, int]:
         """
@@ -157,19 +171,25 @@ class Simulator:
                 ocupation[zone] = ocupation.get(zone, 0) + 1
         return ocupation
 
-    def can_move(self, next_zone: Zone, ocupation: dict[Zone, int]) -> bool:
+
+    def can_move(self, next_zone: Zone, ocupation: dict, 
+                connection, conn_usage: dict) -> bool:
         """
-        Validates if a move is legal according to zone and capacity rules.
+            Validates if a move is legal according to zone and capacity rules.
 
-        Args:
-            next_zone: The Zone the drone is attempting to enter.
-            occupation: Current count of drones per zone in this turn.
+            Args:
+                next_zone: The Zone the drone is attempting to enter.
+                occupation: Current count of drones per zone in this turn.
 
-        Returns:
-            True if the move is allowed, False otherwise.
+            Returns:
+                True if the move is allowed, False otherwise.
         """
         if next_zone.zone_type == "blocked":
             return False
         if ocupation.get(next_zone, 0) >= next_zone.max_drones:
             return False
+        if connection:
+            pair = frozenset([connection.zone_a, connection.zone_b])
+            if conn_usage.get(pair, 0) >= connection.max_link_capacity:
+                return False
         return True
