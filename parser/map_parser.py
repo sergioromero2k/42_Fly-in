@@ -27,10 +27,10 @@ class Parser:
         Raises:
             ValueError: If an invalid zone type is encountered.
         """
-        name = tokens[1]
+        name = tokens[0]
         try:
-            x = int(tokens[2])
-            y = int(tokens[3])
+            x = int(tokens[1])
+            y = int(tokens[2])
         except (ValueError, IndexError):
             raise ValueError(
                 "Error: zone coordinates must be valid integers and present.")
@@ -39,10 +39,10 @@ class Parser:
         max_drones = 1
         VALID_ZONE_TYPES = {"normal", "blocked", "restricted", "priority"}
 
-        metadata_matches = re.findall(r'\[([^\]]*)\]', " ".join(tokens[4:]))
+        metadata_matches = re.findall(r'\[([^\]]*)\]', " ".join(tokens[3:]))
         if metadata_matches:
             combined = " ".join(metadata_matches)
-            pairs = re.findall(r'(\w+)=(-?\w+)', combined)
+            pairs = re.findall(r'(\w+)\s*=\s*(-?\w+)', combined)
             if not pairs and combined.strip():
                 raise ValueError(
                     f"Error: invalid metadata format '{combined}', "
@@ -104,7 +104,8 @@ class Parser:
                         raise ValueError(
                             f"Error: zone name '{zone_name}' "
                             "cannot contain dashes or spaces.")
-                    tokens = line.split()
+                    clean_zone_line = line.split(":", 1)[1].strip()
+                    tokens = clean_zone_line.split()
                     zone = self.parse_zone(tokens)
                     self._register_zone(zone, seen_zones, zones)
                     if line.startswith("start_hub:"):
