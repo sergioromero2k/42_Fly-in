@@ -34,7 +34,7 @@ class Simulator:
 
         This constructor finds all available paths and implements a selection
         strategy that identifies potential bottlenecks
-            (zones with max_drone=1).
+            (zones with max_drones=1).
         It prioritizes paths that efficiently distribute the load across these
         bottlenecks and then balances the drone fleet among
             the most optimal routes.
@@ -62,7 +62,7 @@ class Simulator:
         zone_count: Counter[str] = Counter()
         for path in paths:
             for zone in path:
-                if zone.max_drone == 1:
+                if zone.max_drones == 1:
                     zone_count[zone.name] += 1
 
         bottlenecks = [name for name, count in zone_count.most_common(3)]
@@ -170,6 +170,6 @@ class Simulator:
         """
         if next_zone.zone_type == "blocked":
             return False
-        if ocupation.get(next_zone, 0) >= next_zone.max_drone:
+        if ocupation.get(next_zone, 0) >= next_zone.max_drones:
             return False
         return True

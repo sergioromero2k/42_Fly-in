@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Module for parsing drone network configuration files."""
+import re
 from models.zone import Zone
 from models.connection import Connection
 from models.graph import Graph
@@ -27,33 +28,26 @@ class Parser:
             ValueError: If an invalid zone type is encountered.
         """
         name = tokens[1]
-        if "-" in name or " " in name:
-            raise ValueError(
-                f"Error: zone name '{name}' cannot contain dashes or spaces."
-            )
-
         try:
             x = int(tokens[2])
             y = int(tokens[3])
-        except ValueError:
-            raise ValueError("Error: zone coordinates must be valid integers.")
+        except (ValueError, IndexError):
+            raise ValueError(
+                "Error: zone coordinates must be valid integers and present.")
         zone_type = "normal"
         color = None
         max_drones = 1
         VALID_ZONE_TYPES = {"normal", "blocked", "restricted", "priority"}
 
-        if len(tokens) > 4:
-            metadata_list = tokens[4:]
-            for metadata in metadata_list:
-                metadata = metadata.replace("[", "").replace("]", "")
-                tokens_metadata = metadata.split("=")
-                if len(tokens_metadata) != 2:
-                    raise ValueError(
-                        f"Error: invalid metadata format '{metadata}', "
-                        "expected 'key=value'"
-                    )
-                key = tokens_metadata[0]
-                value = tokens_metadata[1]
+        metadata_matches = re.findall(r'\[([^\]]*)\]', " ".join(tokens[4:]))
+        if metadata_matches:
+            combined = " ".join(metadata_matches)
+            pairs = re.findall(r'(\w+)=(-?\w+)', combined)
+            if not pairs and combined.strip():
+                raise ValueError(
+                    f"Error: invalid metadata format '{combined}', "
+                    "expected 'key=value'")
+            for key, value in pairs:
                 if key == "zone":
                     if value not in VALID_ZONE_TYPES:
                         raise ValueError(f"Error: invalid zone type '{value}'")
@@ -91,23 +85,49 @@ class Parser:
         with open(filepath, "r", encoding="utf-8") as file:
             for line in file:
                 line = line.strip()
-                if line.startswith("#"):
+                if not line or line.startswith("#"):
                     continue
                 elif line.startswith("nb_drones:"):
                     tokens = line.split()
                     nb_drones = self._parse_positive_int(
                         tokens[1], "nb_drones")
                 elif line.startswith(("start_hub:", "end_hub:", "hub:")):
+                    name_match = re.search(
+                        r'(?:start_hub|end_hub|hub):\s+(.+?)\s+\d+\s+\d+',
+                        line)
+                    if not name_match:
+                        raise ValueError(
+                            "Error: invalid zone definition. "
+                            "Expected: <type>: <name> <x> <y>")
+                    zone_name = name_match.group(1).strip()
+                    if "-" in zone_name or " " in zone_name:
+                        raise ValueError(
+                            f"Error: zone name '{zone_name}' "
+                            "cannot contain dashes or spaces.")
                     tokens = line.split()
                     zone = self.parse_zone(tokens)
                     self._register_zone(zone, seen_zones, zones)
                     if line.startswith("start_hub:"):
+                        if start is not None:
+                            raise ValueError(
+                                "Error: multiple start_hubs defined.")
                         start = zone
                     elif line.startswith("end_hub:"):
+                        if end is not None:
+                            raise ValueError(
+                                "Error: multiple end_hubs defined.")
                         end = zone
                 elif line.startswith("connection:"):
-                    tokens = line.split()
-                    zone_names = tokens[1].split("-")
+                    clean_conn = line[11:].strip()
+                    conn_part = clean_conn.split("[")[0].strip()
+                    zone_names = conn_part.split("-")
+
+                    if (
+                        len(zone_names) != 2
+                        or not zone_names[0]
+                        or not zone_names[1]
+                    ):
+                        raise ValueError("Error: invalid connection syntax.")
 
                     pair = frozenset([zone_names[0], zone_names[1]])
                     if pair in seen_connections:
@@ -121,20 +141,20 @@ class Parser:
                         (z for z in zones if z.name == zone_names[1]), None)
 
                     max_link_capacity = 1
-                    if len(tokens) > 2:
-                        metadata = tokens[2].replace("[", "").replace("]", "")
-                        tokens_metadata = metadata.split("=")
-                        if tokens_metadata[0] == "max_link_capacity":
-                            max_link_capacity = self._parse_positive_int(
-                                tokens_metadata[1], "max_link_capacity")
+                    cap_match = re.search(
+                        r'max_link_capacity=([^\s\]]+)', line)
+                    if cap_match:
+                        max_link_capacity = self._parse_positive_int(
+                            cap_match.group(1), "max_link_capacity")
+
                     if zone_a is None:
                         raise ValueError(
                             f"Error: unknown zone '{zone_names[0]}'"
-                            "in connection")
+                            " in connection")
                     if zone_b is None:
                         raise ValueError(
                             f"Error: unknown zone '{zone_names[1]}'"
-                            "in connection")
+                            " in connection")
 
                     connections.append(
                         Connection(zone_a, zone_b, max_link_capacity))
