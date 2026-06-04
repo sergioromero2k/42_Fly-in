@@ -45,8 +45,8 @@ class GraphDisplay:
 
         for zone in self.graph.zones:
             try:
-                color = zone.color if zone.color else "white"
+                color = zone.color if zone.color else "slategray"
                 ax.scatter(zone.x, zone.y, color=color, s=500, zorder=5)
             except ValueError:
-                ax.scatter(zone.x, zone.y, color="white", s=500, zorder=5)
+                ax.scatter(zone.x, zone.y, color="slategray", s=500, zorder=5)
         plt.show()

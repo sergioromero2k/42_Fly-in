@@ -28,24 +28,6 @@ class Simulator:
     """
 
     def __init__(self, graph: Graph) -> None:
-        """
-        Initializes the simulator and schedules drone paths
-            using bottleneck analysis.
-
-        This constructor finds all available paths and implements a selection
-        strategy that identifies potential bottlenecks
-            (zones with max_drones=1).
-        It prioritizes paths that efficiently distribute the load across these
-        bottlenecks and then balances the drone fleet among
-            the most optimal routes.
-
-        Args:
-            graph: A validated Graph object representing the network topology.
-
-        Raises:
-            ValueError: If no valid path is found between
-                the start and end hubs.
-        """
         self.graph = graph
         self.drones: List[Drone] = []
         self.turn: int = 0
@@ -59,32 +41,13 @@ class Simulator:
             raise ValueError(
                 "Error: no valid path found between start and end.")
 
-        zone_count: Counter[str] = Counter()
-        for path in paths:
-            for zone in path:
-                if zone.max_drones == 1:
-                    zone_count[zone.name] += 1
-
-        bottlenecks = [name for name, count in zone_count.most_common(3)]
-        best_paths = []
-        for bottleneck in bottlenecks:
-            group = [p for p in paths if any(z.name == bottleneck for z in p)]
-            if group:
-                group.sort(key=lambda p: len(p))
-                best_paths.append(group[0])
-
-        paths = best_paths if best_paths else paths
-
+        # Ordenar por longitud — rutas más cortas primero
         paths.sort(key=lambda p: len(p))
         shortest = len(paths[0])
-        paths = [p for p in paths if len(p) <= shortest + 2]
+        paths = [p for p in paths if len(p) == shortest]
 
-        if not paths:
-            paths = pathfinder.find_all_paths(self.graph.start, self.graph.end)
-            paths.sort(key=lambda p: len(p))
-
+        # Distribuir drones equilibradamente
         drones_per_path = [0] * len(paths)
-
         for i in range(self.graph.nb_drones):
             min_index = drones_per_path.index(min(drones_per_path))
             drones_per_path[min_index] += 1
@@ -114,9 +77,12 @@ class Simulator:
         arrived = sum(1 for drone in self.drones if drone.state == "arrived")
         print(f"Drones delivered: {arrived}/{self.graph.nb_drones}")
 
-
-
     def compute_turn(self) -> List[str]:
+        """
+        Calculates valid movements for the current turn.
+        Restricted zones cost 2 turns — drone occupies connection first turn,
+        arrives at zone second turn.
+        """
         ocupation: dict[Zone, int] = self.get_ocupation()
         conn_usage: dict = {}
         movements = []
@@ -125,17 +91,19 @@ class Simulator:
             if drone.state == "arrived":
                 continue
 
-            # CASO 1: dron en tránsito hacia restricted
+            # CASO 1: dron en tránsito en conexión hacia restricted
             if drone.wait > 0:
                 drone.wait -= 1
                 if drone.wait == 0 and drone.next_zone is not None:
-                    # llega a la zona restricted
                     drone.current_zone = drone.next_zone
                     drone.path_index += 1
-                    drone.next_zone = None
                     movements.append(f"D{drone.id}-{drone.current_zone.name}")
+                    drone.next_zone = None
                     if drone.current_zone == self.graph.end:
                         drone.state = "arrived"
+                else:
+                    conn_name = f"{drone.current_zone.name}_{drone.next_zone.name}"
+                    movements.append(f"D{drone.id}-{conn_name}")
                 continue
 
             # CASO 2: dron en tierra intenta moverse
@@ -147,12 +115,12 @@ class Simulator:
                     if connection:
                         pair = frozenset([connection.zone_a, connection.zone_b])
                         conn_usage[pair] = conn_usage.get(pair, 0) + 1
+
                     ocupation[drone.current_zone] = ocupation.get(
                         drone.current_zone, 0) - 1
                     ocupation[next_zone] = ocupation.get(next_zone, 0) + 1
 
                     if next_zone.zone_type == "restricted":
-                        # entra a la conexión, llega el próximo turno
                         drone.wait = 1
                         drone.next_zone = next_zone
                         conn_name = f"{drone.current_zone.name}_{next_zone.name}"

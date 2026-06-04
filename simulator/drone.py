@@ -2,7 +2,7 @@
 """Module defining the Drone entity and its state within the simulation."""
 
 from models.zone import Zone
-from typing import List
+from typing import List, Optional
 
 
 class Drone:
@@ -25,7 +25,7 @@ class Drone:
         self.path_index = 0
         self.state = "waiting"
         self.wait = 0
-        self.next_zone: Zone | None = None 
+        self.next_zone: Optional[Zone] = None
 
     def __str__(self) -> str:
         return (
