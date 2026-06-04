@@ -61,7 +61,7 @@ class TerminalVisualizer:
         """
         for zone in self.graph.zones:
             if zone_name == zone.name:
-                if zone.color:
+                if zone.color and zone.color in self.COLORS:
                     return self.COLORS[zone.color]
         return self.COLORS["reset"]
 
