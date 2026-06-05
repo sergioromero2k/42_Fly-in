@@ -8,7 +8,6 @@ from pathfinder.pathfinder import PathFinder
 from visualizer.terminal import TerminalVisualizer
 from visualizer.graph_display import GraphDisplay
 from typing import List
-from collections import Counter
 
 
 class Simulator:
@@ -41,12 +40,10 @@ class Simulator:
             raise ValueError(
                 "Error: no valid path found between start and end.")
 
-        # Ordenar por longitud — rutas más cortas primero
         paths.sort(key=lambda p: len(p))
         shortest = len(paths[0])
         paths = [p for p in paths if len(p) == shortest]
 
-        # Distribuir drones equilibradamente
         drones_per_path = [0] * len(paths)
         for i in range(self.graph.nb_drones):
             min_index = drones_per_path.index(min(drones_per_path))
@@ -63,10 +60,10 @@ class Simulator:
             and updating visualizers.
         """
         self.display.draw()
-        max_turns = 1000 # Filter >1000
+        max_turns = 1000
         while not all(drone.state == "arrived" for drone in self.drones):
             self.turn += 1
-            if self.turn > max_turns: # Filter >1000
+            if self.turn > max_turns:
                 print(f"Warning: simulation stopped at {max_turns} turns")
                 break
             movements = self.compute_turn()
@@ -102,7 +99,10 @@ class Simulator:
                     if drone.current_zone == self.graph.end:
                         drone.state = "arrived"
                 else:
-                    conn_name = f"{drone.current_zone.name}_{drone.next_zone.name}"
+                    conn_name = (
+                        f"{drone.current_zone.name}_"
+                        f"{drone.next_zone.name}"
+                    )
                     movements.append(f"D{drone.id}-{conn_name}")
                 continue
 
@@ -113,7 +113,9 @@ class Simulator:
 
                 if self.can_move(next_zone, ocupation, connection, conn_usage):
                     if connection:
-                        pair = frozenset([connection.zone_a, connection.zone_b])
+                        pair = frozenset(
+                            [connection.zone_a, connection.zone_b]
+                        )
                         conn_usage[pair] = conn_usage.get(pair, 0) + 1
 
                     ocupation[drone.current_zone] = ocupation.get(
@@ -123,7 +125,11 @@ class Simulator:
                     if next_zone.zone_type == "restricted":
                         drone.wait = 1
                         drone.next_zone = next_zone
-                        conn_name = f"{drone.current_zone.name}_{next_zone.name}"
+
+                        conn_name = (
+                            f"{drone.current_zone.name}_"
+                            f"{next_zone.name}"
+                        )
                         movements.append(f"D{drone.id}-{conn_name}")
                     else:
                         drone.current_zone = next_zone
@@ -135,10 +141,13 @@ class Simulator:
         return movements
 
     def get_connection(self, zone_a: Zone, zone_b: Zone):
-        """Returns the Connection object between two zones, or None if not found."""
+        """Return the connection between two zones, or None."""
         for connection in self.graph.connections:
-            if (connection.zone_a == zone_a and connection.zone_b == zone_b) or \
-            (connection.zone_b == zone_a and connection.zone_a == zone_b):
+            if (
+                (connection.zone_a == zone_a and connection.zone_b == zone_b)
+                or
+                (connection.zone_b == zone_a and connection.zone_a == zone_b)
+            ):
                 return connection
         return None
 
@@ -156,8 +165,8 @@ class Simulator:
                 ocupation[zone] = ocupation.get(zone, 0) + 1
         return ocupation
 
-
-    def can_move(self, next_zone: Zone, ocupation: dict, 
+    def can_move(
+                self, next_zone: Zone, ocupation: dict,
                 connection, conn_usage: dict) -> bool:
         """
             Validates if a move is legal according to zone and capacity rules.
