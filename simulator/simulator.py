@@ -3,6 +3,7 @@
 
 from models.graph import Graph
 from models.zone import Zone
+from models.connection import Connection
 from simulator.drone import Drone
 from pathfinder.pathfinder import PathFinder
 from visualizer.terminal import TerminalVisualizer
@@ -81,7 +82,7 @@ class Simulator:
         arrives at zone second turn.
         """
         ocupation: dict[Zone, int] = self.get_ocupation()
-        conn_usage: dict = {}
+        conn_usage: dict[frozenset[Zone], int] = {}
         movements = []
 
         for drone in self.drones:
@@ -99,10 +100,12 @@ class Simulator:
                     if drone.current_zone == self.graph.end:
                         drone.state = "arrived"
                 else:
-                    conn_name = (
-                        f"{drone.current_zone.name}_"
-                        f"{drone.next_zone.name}"
-                    )
+                    if drone.next_zone is not None:
+                        conn_name = (
+                            f"{drone.current_zone.name}_"
+                            f"{drone.next_zone.name}"
+                        )
+                        movements.append(f"D{drone.id}-{conn_name}")
                     movements.append(f"D{drone.id}-{conn_name}")
                 continue
 
@@ -140,7 +143,8 @@ class Simulator:
 
         return movements
 
-    def get_connection(self, zone_a: Zone, zone_b: Zone):
+    def get_connection(
+            self, zone_a: Zone, zone_b: Zone) -> Connection | None:
         """Return the connection between two zones, or None."""
         for connection in self.graph.connections:
             if (
@@ -166,8 +170,9 @@ class Simulator:
         return ocupation
 
     def can_move(
-                self, next_zone: Zone, ocupation: dict,
-                connection, conn_usage: dict) -> bool:
+            self, next_zone: Zone, ocupation: dict[Zone, int],
+            connection: Connection | None,
+            conn_usage: dict[frozenset[Zone], int]) -> bool:
         """
             Validates if a move is legal according to zone and capacity rules.
 

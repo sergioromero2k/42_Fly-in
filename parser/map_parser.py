@@ -74,13 +74,13 @@ class Parser:
                 duplicate connections, or invalid drone counts.
             FileNotFoundError: If the specified file does not exist.
         """
-        zones = []
-        connections = []
-        start = None
-        end = None
-        nb_drones = 0
-        seen_connections = set()
-        seen_zones = set()
+        zones: list[Zone] = []
+        connections: list[Connection] = []
+        start: Zone | None = None
+        end: Zone | None = None
+        nb_drones: int = 0
+        seen_connections: set[frozenset[str]] = set()
+        seen_zones: set[str] = set()
 
         with open(filepath, "r", encoding="utf-8") as file:
             for line in file:
@@ -178,7 +178,8 @@ class Parser:
             raise ValueError(f"Error: {field} cannot exceed {MAX_VALUE}.")
         return result
 
-    def _register_zone(self, zone: Zone, seen_zones: set, zones: list) -> None:
+    def _register_zone(
+            self, zone: Zone, seen_zones: set[str], zones: list[Zone]) -> None:
         """Registers a zone and checks for duplicates."""
         if zone.name in seen_zones:
             raise ValueError(f"Error: duplicate zone name '{zone.name}'")
