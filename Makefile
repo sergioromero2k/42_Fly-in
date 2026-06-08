@@ -39,18 +39,17 @@ run:
 	$(BIN) $(MAIN) $(MAP)
 
 # Debug mode (specific flags can be added here)
-debug:
+debug: install
 	@echo "$(GREEN)Running in debug mode...$(NC)"
 	$(BIN) $(MAIN) $(MAP) --debug
 
-# Code quality verification (Mandatory per subject/requirements)
-lint:
+lint: install
 	@echo "$(GREEN)Running Flake8 check...$(NC)"
 	$(ENV)/bin/flake8 .  --exclude=venv,test_env,env,.venv
 	@echo "$(GREEN)Running Mypy type check...$(NC)"
 	$(ENV)/bin/mypy $(SRC) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
-lint-strict:
+lint-strict: install
 	@echo "$(GREEN)Running Flake8 strict...$(NC)"
 	$(ENV)/bin/flake8 . --exclude=venv
 	@echo "$(GREEN)Running Mypy strict...$(NC)"

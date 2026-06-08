@@ -7,6 +7,8 @@ from models.graph import Graph
 from typing import List
 
 MAX_VALUE = 1000
+# Start/end zones have no occupancy limit (subject VII.2)
+MAX_DRONES_START_END = 9999
 
 
 class Parser:
@@ -112,11 +114,15 @@ class Parser:
                         if start is not None:
                             raise ValueError(
                                 "Error: multiple start_hubs defined.")
+                        if "max_drones" not in line:
+                            zone.max_drones = MAX_DRONES_START_END
                         start = zone
                     elif line.startswith("end_hub:"):
                         if end is not None:
                             raise ValueError(
                                 "Error: multiple end_hubs defined.")
+                        if "max_drones" not in line:
+                            zone.max_drones = MAX_DRONES_START_END
                         end = zone
                 elif line.startswith("connection:"):
                     clean_conn = line[11:].strip()
